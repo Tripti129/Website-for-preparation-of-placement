@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduNerve AI — Assessment Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root{
+    --bg:#07101a;
+    --panel:rgba(255,255,255,0.03);
+    --accent1:#00eaff;
+    --accent2:#8b5cf6;
+    --muted:#a7b7d8;
+  }
+  body{
+    margin:0;
+    font-family:'Poppins',sans-serif;
+    background:var(--bg);
+    color:#e9f2ff;
+  }
+  header{
+    padding:24px 36px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+  h1{font-weight:700;font-size:22px}
+  .back-btn{
+    background:linear-gradient(90deg,var(--accent1),var(--accent2));
+    border:none;
+    padding:10px 18px;
+    border-radius:10px;
+    color:#001018;
+    font-weight:600;
+    cursor:pointer;
+  }
+  main{
+    padding:30px;
+    display:flex;
+    flex-direction:column;
+    gap:24px;
+    max-width:1100px;
+    margin:auto;
+  }
+  .summary{
+    display:flex;
+    flex-wrap:wrap;
+    gap:20px;
+  }
+  .card{
+    background:var(--panel);
+    padding:20px;
+    border-radius:14px;
+    flex:1;
+    min-width:240px;
+    border:1px solid rgba(255,255,255,0.04);
+  }
+  .card h2{font-size:18px;margin-bottom:8px}
+  .card p{color:var(--muted);margin:4px 0}
+  .rubric-section{
+    background:var(--panel);
+    border-radius:14px;
+    padding:24px;
+    border:1px solid rgba(255,255,255,0.04);
+  }
+  .rubric-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:24px;
+    margin-top:16px;
+  }
+  .donut{text-align:center;}
+  .donut svg{transform:rotate(-90deg);}
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    padding:18px;
+    border-top:1px solid rgba(255,255,255,0.05);
+  }
+  canvas{
+    background:var(--panel);
+    border-radius:14px;
+    padding:10px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📊 Performance Assessment</h1>
+  <button class="back-btn" onclick="window.location.href='index.html'">← Back to Dashboard</button>
+</header>
+
+<main>
+  <section class="summary">
+    <div class="card">
+      <h2>Last Quiz Summary</h2>
+      <p><b>Topic:</b> <span id="rTopic">—</span></p>
+      <p><b>Difficulty:</b> <span id="rDiff">—</span></p>
+      <p><b>Date:</b> <span id="rElapsed">—</span></p>
+    </div>
+
+    <div class="card">
+      <h2>Performance Insights</h2>
+      <p>Accuracy: <span id="accVal">—</span>%</p>
+      <p>Time Efficiency: <span id="timeVal">—</span>%</p>
+      <p>Concept Clarity: <span id="conceptVal">—</span>%</p>
+      <p>Consistency: <span id="consVal">—</span>%</p>
+    </div>
+  </section>
+
+  <section class="rubric-section">
+    <h2>Rubric Evaluation</h2>
+    <div class="rubric-grid" id="rubricDonuts">
+      <p style="color:var(--muted)">No recent quiz data found. Complete a quiz to view your rubric report here.</p>
+    </div>
+  </section>
+
+  <section class="rubric-section">
+    <h2>📈 Accuracy Trend Over Time</h2>
+    <canvas id="accuracyChart" height="100"></canvas>
+  </section>
+
+  <section class="rubric-section">
+    <h2>📊 Topic-wise Average Performance</h2>
+    <canvas id="topicChart" height="100"></canvas>
+  </section>
+</main>
+
+<footer>© 2025 EduNerve AI — Intelligent Learning, Assessment & Interview</footer>
+
+<script>
+window.addEventListener("DOMContentLoaded", ()=>{
+  const data = JSON.parse(localStorage.getItem("quizHistory")) || [];
+  if(data.length===0) return;
+  const last = data[data.length-1];
+  document.getElementById("rTopic").textContent = last.topic;
+  document.getElementById("rDiff").textContent = last.difficulty;
+  document.getElementById("rElapsed").textContent = new Date(last.date).toLocaleString();
+
+  const rubric = last.rubric;
+  if(!rubric) return;
+
+  document.getElementById("accVal").textContent = rubric.Accuracy;
+  document.getElementById("timeVal").textContent = rubric.Time;
+  document.getElementById("conceptVal").textContent = rubric.Concept;
+  document.getElementById("consVal").textContent = rubric.Consistency;
+
+  const donutGrid = document.getElementById("rubricDonuts");
+  donutGrid.innerHTML="";
+  for(const [key,val] of Object.entries(rubric)){
+    const donut = document.createElement("div");
+    donut.className="donut";
+    donut.innerHTML = `
+      <svg width="100" height="100" viewBox="0 0 80 80">
+        <defs>
+          <linearGradient id="grad${key}" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="${key==='Accuracy'?'#00eaff': key==='Time'?'#8b5cf6': key==='Concept'?'#00ffb3':'#ffaa00'}" />
+            <stop offset="100%" stop-color="#ffffff33"/>
+          </linearGradient>
+        </defs>
+        <circle cx="40" cy="40" r="35" stroke="#112" stroke-width="10" fill="none"></circle>
+        <circle cx="40" cy="40" r="35" stroke="url(#grad${key})" stroke-width="10" fill="none"
+        stroke-dasharray="${(val/100)*220} 220" stroke-linecap="round"></circle>
+        <text x="40" y="45" text-anchor="middle" fill="#e9f2ff" font-size="14">${val}%</text>
+      </svg>
+      <div style="margin-top:6px;font-size:14px;color:#cde5ff">${key}</div>
+    `;
+    donutGrid.appendChild(donut);
+  }
+
+  // === Chart 1: Accuracy Trend Over Time ===
+  const accLabels = data.map(d => new Date(d.date).toLocaleDateString());
+  const accValues = data.map(d => d.rubric?.Accuracy || 0);
+  const ctx1 = document.getElementById("accuracyChart").getContext("2d");
+  new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels: accLabels,
+      datasets: [{
+        label: "Accuracy (%)",
+        data: accValues,
+        borderColor: "#00eaff",
+        backgroundColor: "rgba(0,234,255,0.1)",
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      scales: {
+        y: { beginAtZero:true, max:100, grid:{color:"rgba(255,255,255,0.05)"}, ticks:{color:"#a7b7d8"} },
+        x: { ticks:{color:"#a7b7d8"} }
+      },
+      plugins: {
+        legend:{labels:{color:"#e9f2ff"}}
+      }
+    }
+  });
+
+  // === Chart 2: Topic-wise Average Performance ===
+  const topics = {};
+  data.forEach(d=>{
+    if(!topics[d.topic]) topics[d.topic] = [];
+    topics[d.topic].push(d.rubric?.Accuracy || 0);
+  });
+  const topicLabels = Object.keys(topics);
+  const topicValues = Object.values(topics).map(a=>Math.round(a.reduce((x,y)=>x+y)/a.length));
+
+  const ctx2 = document.getElementById("topicChart").getContext("2d");
+  new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: topicLabels,
+      datasets: [{
+        label: "Average Accuracy (%)",
+        data: topicValues,
+        backgroundColor: ["#00eaff","#8b5cf6","#00ffb3","#ffaa00","#ff7b00"]
+      }]
+    },
+    options: {
+      scales: {
+        y: { beginAtZero:true, max:100, grid:{color:"rgba(255,255,255,0.05)"}, ticks:{color:"#a7b7d8"} },
+        x: { ticks:{color:"#a7b7d8"} }
+      },
+      plugins: {
+        legend:{labels:{color:"#e9f2ff"}}
+      }
+    }
+  });
+});
+</script>
+
+</body>
+</html>

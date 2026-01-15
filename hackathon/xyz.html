@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduNerve AI — Sign In / Sign Up</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --bg: #050c1a;
+      --accent1: #00eaff;
+      --accent2: #8b5cf6;
+      --panel: rgba(255, 255, 255, 0.05);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at top left, #0a1b2f, #000);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      color: #e9f2ff;
+    }
+    .auth-container {
+      width: 360px;
+      padding: 35px;
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 20px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      text-align: center;
+      transition: all 0.4s ease;
+    }
+    h1 {
+      font-size: 26px;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: #e9f2ff;
+      font-size: 15px;
+      outline: none;
+    }
+    input::placeholder { color: #a7b7d8; }
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #001018;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+      margin-top: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover { transform: translateY(-2px); }
+    .switch {
+      margin-top: 15px;
+      color: #a7b7d8;
+      font-size: 14px;
+    }
+    .switch span {
+      color: var(--accent1);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .message {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #ff8080;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-container" id="authBox">
+    <h1 id="formTitle">Sign In</h1>
+    <input type="text" id="username" placeholder="Username" autocomplete="off">
+    <input type="password" id="password" placeholder="Password">
+    <button id="authBtn" onclick="handleAuth()">Sign In</button>
+    <p class="switch">
+      Don’t have an account? <span onclick="toggleForm()">Sign Up</span>
+    </p>
+    <p class="message" id="msg"></p>
+  </div>
+
+  <script>
+    let isSignUp = false;
+
+    function toggleForm() {
+      const title = document.getElementById("formTitle");
+      const btn = document.getElementById("authBtn");
+      const msg = document.getElementById("msg");
+      const switchText = document.querySelector(".switch span");
+      msg.textContent = "";
+      isSignUp = !isSignUp;
+      if (isSignUp) {
+        title.textContent = "Create Account";
+        btn.textContent = "Sign Up";
+        switchText.textContent = "Sign In";
+        document.querySelector(".switch").childNodes[0].textContent = "Already have an account? ";
+      } else {
+        title.textContent = "Sign In";
+        btn.textContent = "Sign In";
+        switchText.textContent = "Sign Up";
+        document.querySelector(".switch").childNodes[0].textContent = "Don’t have an account? ";
+      }
+    }
+
+    function handleAuth() {
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      const msg = document.getElementById("msg");
+      msg.style.color = "#ff8080";
+
+      if (!user || !pass) {
+        msg.textContent = "Please fill out all fields.";
+        return;
+      }
+
+      const users = JSON.parse(localStorage.getItem("eduUsers")) || [];
+
+      if (isSignUp) {
+        // Check if username exists
+        if (users.find(u => u.user === user)) {
+          msg.textContent = "Username already exists.";
+          return;
+        }
+        users.push({ user, pass });
+        localStorage.setItem("eduUsers", JSON.stringify(users));
+        msg.style.color = "#00ffb3";
+        msg.textContent = "Account created successfully! Please Sign In.";
+        toggleForm();
+      } else {
+        const found = users.find(u => u.user === user && u.pass === pass);
+        if (found) {
+          msg.style.color = "#00ffb3";
+          msg.textContent = "Login successful! Redirecting...";
+          localStorage.setItem("currentUser", user);
+          setTimeout(() => { window.location.href = "deshboard.html"; }, 1200);
+        } else {
+          msg.textContent = "Invalid username or password.";
+        }
+      }
+    }
+  </script>
+
+</body>
+</html>

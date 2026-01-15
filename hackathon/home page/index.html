@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduNerve AI - Dashboard</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif;}
+
+body{background:#0d0f21;color:#fff;}
+
+.container{
+  display:flex;
+}
+
+/* ----- Sidebar ----- */
+.sidebar{
+  width:280px;
+  background:#111329;
+  padding:25px;
+  height:100vh;
+  border-right:1px solid rgba(255,255,255,0.1);
+  position:fixed;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.profile-pic{
+  width:140px;height:140px;
+  border-radius:50%;
+  overflow:hidden;
+  box-shadow:0 0 18px #8b5cf6;
+  margin-bottom:15px;
+}
+.profile-pic img{width:100%;height:100%;object-fit:cover;}
+
+.sidebar h3{font-size:22px;margin-bottom:5px;}
+.sidebar p{font-size:13px;opacity:0.8;margin-bottom:5px;text-align:center;}
+
+hr{
+  width:100%;
+  border:0;
+  border-top:1px solid rgba(255,255,255,0.2);
+  margin:12px 0;
+}
+
+/* Progress Box */
+.progress-box{width:100%;margin-top:10px;}
+.progress-bar{
+  width:100%;
+  height:9px;
+  background:#222;
+  border-radius:10px;
+  overflow:hidden;
+}
+.progress-fill{
+  height:9px;
+  width:70%;
+  background:#8b5cf6;
+  box-shadow:0 0 10px #8b5cf6;
+}
+.progress-text{
+  font-size:12px;opacity:0.8;margin-top:5px;display:block;text-align:center;
+}
+
+/* ----- Main Content ----- */
+.main-content{
+  margin-left:280px;
+  width:calc(100% - 280px);
+  padding:30px;
+}
+
+header{text-align:center;margin-bottom:20px;}
+
+.logo{font-size:32px;font-weight:700;}
+.logo span{color:#8b5cf6;text-shadow:0 0 12px #8b5cf6;}
+.tagline{font-size:14px;opacity:0.7;margin-top:5px;}
+
+.hero{text-align:center;margin-top:10px;}
+.hero h1{text-shadow:0 0 15px #3b82f6;}
+.hero p{opacity:.8;margin-bottom:25px;}
+
+/* Cards */
+.modes{
+  display:flex;
+  justify-content:center;
+  gap:40px;
+  flex-wrap:wrap;
+}
+
+.card{
+  background:rgba(255,255,255,0.06);
+  padding:25px;
+  width:300px;
+  border-radius:15px;
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.1);
+  box-shadow:0 0 15px rgba(139,92,246,.4);
+  cursor:pointer;
+  transition:.4s;
+  text-align:center;
+}
+.card:hover{
+  transform:translateY(-8px);
+  box-shadow:0 0 20px rgba(59,130,246,.6);
+}
+
+button{
+  background:linear-gradient(45deg,#2563eb,#8b5cf6);
+  border:none;padding:8px 18px;font-size:14px;
+  border-radius:10px;color:#fff;cursor:pointer;margin-top:10px;
+}
+button:hover{opacity:.8}
+
+/* AI Floating Icon */
+.ai-assistant{
+  position:fixed;bottom:20px;right:20px;
+  background:#1f2340;padding:15px;border-radius:50%;
+  font-size:24px;cursor:pointer;
+  box-shadow:0 0 12px #8b5cf6;transition:.3s;
+}
+.ai-assistant:hover{transform:scale(1.1);}
+
+.ai-popup{
+  display:none;position:fixed;bottom:90px;right:20px;
+  background:#1e2248;padding:15px;border-radius:10px;width:220px;
+  border:1px solid #8b5cf660;box-shadow:0 0 10px #8b5cf6;
+}
+.ai-popup button{margin-top:10px;width:100%}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="profile-pic">
+        <img src="https://i.imgur.com/0y8Ftya.png" alt="Student">
+    </div>
+    <h3>Sneha Bathla</h3>
+    <p>B.Tech CSE (2022–2026)</p>
+    <p>Geeta University</p>
+    <p>📞 +91 98XXXXXXXX</p>
+
+    <hr>
+
+    <div class="progress-box">
+        <label>Overall Progress</label>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        <span class="progress-text">70% Ready</span>
+    </div>
+</aside>
+
+<!-- Main Content -->
+<div class="main-content">
+
+<header>
+  <div class="logo">EduNerve<span>AI</span></div>
+  <div class="tagline">Your AI Mentor for Placement Success</div>
+</header>
+
+<section class="hero">
+  <h1>Welcome Sneha 👋</h1>
+  <p>Smart Learning, AI Interview Coaching & Real-time Skill Growth</p>
+
+  <div class="modes">
+    <div class="card" onclick="goToMode('learning')">
+      <h2>AI Learning & Assessment</h2>
+      <p>Personalized path, quizzes & coding tests</p>
+      <button>Start Learning</button>
+    </div>
+
+    <div class="card" onclick="goToMode('interview')">
+      <h2>AI Interview & Career Mode</h2>
+      <p>Mock interviews, resume feedback & guidance</p>
+      <button>Start Interview Prep</button>
+    </div>
+  </div>
+</section>
+
+</div>
+</div>
+
+<!-- AI Bot -->
+<div class="ai-assistant" onclick="showAIMessage()">🤖</div>
+<div id="aiPopup" class="ai-popup">
+  <p>Hi Sneha! I'm your AI mentor. Let's achieve goals today 🚀</p>
+  <button onclick="closeAI()">Close</button>
+</div>
+
+<script>
+function goToMode(mode){
+  alert("Selected Mode: " + mode);
+}
+function showAIMessage(){
+  document.getElementById("aiPopup").style.display="block";
+}
+function closeAI(){
+  document.getElementById("aiPopup").style.display="none";
+}
+</script>
+
+</body>
+</html>

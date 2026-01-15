@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Practice — 3D Question Card</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --accent:#7c5cff;
+      --glass: rgba(255,255,255,0.04);
+      --muted: #9aa4c0;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --glass-2: rgba(255,255,255,0.025);
+      --neon: 0 6px 30px rgba(124,92,255,0.16);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071024 0%, #081329 60%);color:#e6eef8}
+    .wrap{max-width:1100px;margin:36px auto;padding:28px;display:grid;grid-template-columns:360px 1fr;gap:28px}
+
+    /* SIDEBAR */
+    .panel{background:linear-gradient(180deg,var(--card), #061221);border-radius:14px;padding:18px;box-shadow:var(--neon);backdrop-filter: blur(6px)}
+    .brand{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#3ec7ff);display:grid;place-items:center;font-weight:700}
+    h2{margin:0;font-size:18px}
+    p.lead{color:var(--muted);margin:8px 0 14px;font-size:13px}
+
+    label{display:block;font-size:13px;color:var(--muted);margin-top:8px}
+    select, .btn, .small-btn{appearance:none;border:0;background:transparent;color:inherit}
+    .select-wrap{margin-top:10px}
+    select{width:100%;padding:12px;border-radius:10px;background:linear-gradient(180deg,var(--glass),var(--glass-2));outline:1px solid rgba(255,255,255,0.03);font-weight:600}
+
+    .modes{display:flex;gap:8px;margin-top:12px}
+    .mode{flex:1;padding:10px;text-align:center;border-radius:10px;background:rgba(255,255,255,0.02);cursor:pointer;border:1px solid rgba(255,255,255,0.02)}
+    .mode.active{background:linear-gradient(90deg, rgba(124,92,255,0.12), rgba(62,199,255,0.04));box-shadow:0 6px 24px rgba(124,92,255,0.06);border:1px solid rgba(124,92,255,0.24)}
+
+    .control-row{display:flex;gap:10px;margin-top:14px}
+    .btn{padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#3ec7ff);color:#fff;font-weight:700;cursor:pointer}
+    .small-btn{padding:8px 10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);font-weight:700}
+
+    .meta{display:flex;gap:12px;margin-top:18px;color:var(--muted);font-size:13px}
+    .meta .item{background:rgba(255,255,255,0.02);padding:10px;border-radius:10px;flex:1;text-align:center}
+
+    /* MAIN AREA */
+    .stage{min-height:560px;padding:18px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.12));box-shadow:0 10px 40px rgba(2,6,23,0.6);position:relative}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .progress{display:flex;align-items:center;gap:10px}
+    .dots{display:flex;gap:6px}
+    .dot{width:10px;height:10px;border-radius:6px;background:rgba(255,255,255,0.03)}
+    .dot.active{background:var(--accent);box-shadow:0 6px 18px rgba(124,92,255,0.12)}
+    .timer{font-weight:700;color:var(--muted)}
+
+    /* 3D CARD */
+    .card-3d-wrap{perspective:1200px;display:grid;place-items:center;height:420px}
+    .card-3d{width:720px;max-width:100%;height:360px;transition: transform 0.9s;transform-style:preserve-3d;position:relative}
+    .card-face{position:absolute;inset:0;border-radius:12px;padding:20px;backface-visibility:hidden;display:flex;flex-direction:column;justify-content:space-between}
+
+    .card-front{background:linear-gradient(180deg, rgba(13,22,36,0.9), rgba(3,9,18,0.9));border:1px solid rgba(255,255,255,0.03);box-shadow:0 20px 60px rgba(2,6,23,0.7)}
+    .card-back{background:linear-gradient(180deg, rgba(2,8,20,0.9), rgba(6,12,20,0.95));transform:rotateY(180deg);border:1px solid rgba(255,255,255,0.03)}
+
+    .q-head{display:flex;align-items:center;gap:12px}
+    .q-no{width:48px;height:48px;border-radius:10px;background:linear-gradient(180deg,#0b1220, rgba(124,92,255,0.12));display:grid;place-items:center;font-weight:800}
+    .q-title{font-size:18px}
+    pre.code{background:rgba(0,0,0,0.35);padding:10px;border-radius:8px;margin:10px 0;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono";font-size:14px;color:#dbeafe;overflow:auto}
+
+    .options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+    .opt{padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);cursor:pointer;border:1px solid rgba(255,255,255,0.03);font-weight:700}
+    .opt.selected{outline:3px solid rgba(124,92,255,0.12);box-shadow:0 8px 30px rgba(124,92,255,0.06)}
+    .opt.correct{background:linear-gradient(90deg, rgba(34,197,94,0.12), rgba(124,92,255,0.03));border:1px solid rgba(34,197,94,0.18)}
+    .opt.wrong{background:linear-gradient(90deg, rgba(239,68,68,0.08), rgba(124,92,255,0.02));border:1px solid rgba(239,68,68,0.14)}
+
+    .back-explain{color:var(--muted);font-size:14px}
+    .actions{display:flex;gap:12px;justify-content:flex-end}
+
+    .controls-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+    .score{font-weight:800}
+
+    /* SMALL SCREEN */
+    @media (max-width:900px){.wrap{grid-template-columns:1fr;padding:16px}.card-3d{width:100%}.card-3d-wrap{height:360px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="panel">
+      <div class="brand">
+        <div class="logo">P</div>
+        <div>
+          <h2>Practice — Session</h2>
+          <p class="lead">Pick subject, choose mode and practice. Cards flip for explanation.</p>
+        </div>
+      </div>
+
+      <label for="subject">Subject</label>
+      <div class="select-wrap">
+        <select id="subject">
+          <option value="js">JavaScript</option>
+          <option value="html">HTML</option>
+          <option value="css">CSS</option>
+          <option value="dsa">DSA</option>
+        </select>
+      </div>
+
+      <label>Mode</label>
+      <div class="modes">
+        <div class="mode active" data-mode="mcq">MCQ</div>
+        <div class="mode" data-mode="coding">Coding</div>
+        <div class="mode" data-mode="output">Output</div>
+      </div>
+
+      <div class="control-row">
+        <button class="btn" id="startBtn">Start Practice</button>
+        <button class="small-btn" id="resetBtn">Reset</button>
+      </div>
+
+      <div class="meta">
+        <div class="item">Streak<br><strong id="streak">0</strong></div>
+        <div class="item">Score<br><strong id="score">0</strong></div>
+        <div class="item">Time/ Q<br><strong>30s</strong></div>
+      </div>
+
+      <p style="margin-top:14px;color:var(--muted);font-size:13px">Tip: Hover or click the card to reveal explanation. Use the subject dropdown to load targeted questions.</p>
+    </aside>
+
+    <main class="stage">
+      <div class="topbar">
+        <div class="progress">
+          <div class="dots" id="dots"></div>
+          <div style="margin-left:12px;color:var(--muted);font-weight:700" id="qLabel">Question 1 / 5</div>
+        </div>
+        <div class="timer" id="timer">00:30</div>
+      </div>
+
+      <div class="card-3d-wrap">
+        <div class="card-3d" id="card3d">
+
+          <!-- FRONT -->
+          <div class="card-face card-front">
+            <div>
+              <div class="q-head">
+                <div class="q-no" id="qNo">1</div>
+                <div>
+                  <div class="q-title" id="qTitle">What is the output of this code?</div>
+                  <div style="color:var(--muted);font-size:13px;margin-top:4px" id="qSub">JavaScript — MCQ</div>
+                </div>
+              </div>
+
+              <pre class="code" id="qCode" style="display:none">console.log("10" - 5);</pre>
+
+              <div class="options" id="options">
+                <!-- options populated by JS -->
+              </div>
+            </div>
+
+            <div class="controls-bottom">
+              <div class="score">Score: <span id="liveScore">0</span></div>
+              <div class="actions">
+                <button class="small-btn" id="explainBtn">Show Explanation</button>
+                <button class="btn" id="nextBtn">Next</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- BACK -->
+          <div class="card-face card-back">
+            <div>
+              <h3 style="margin:0">Explanation</h3>
+              <p class="back-explain" id="explainText">Correct answer and brief explanation will appear here.</p>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+              <div style="color:var(--muted);font-size:13px">Hint: read carefully</div>
+              <div style="display:flex;gap:8px">
+                <button class="small-btn" id="prevBtn">Prev</button>
+                <button class="btn" id="flipBack">Close</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    // --- Sample question banks ---
+    const banks = {
+      js: [
+        {q:'What is the output of this JavaScript code?', code:'console.log("10" - 5);', opts:['5','"105"','10','NaN'], ans:0, exp:'"10" - 5 converts the string to number, result 5.'},
+        {q:'Which method adds an element to the end of an array?', code:'', opts:['push()','pop()','shift()','unshift()'], ans:0, exp:'push() appends to the end.'},
+        {q:'What does === do?', code:'', opts:['Type and value equality','Only value equality','Only type equality','None'], ans:0, exp:'=== checks both type and value.'},
+        {q:'Which creates a new scope in JS?', code:'', opts:['let','var','function without block','both let and function'], ans:3, exp:'let is block scoped; functions create function scope.'}
+      ],
+      html: [
+        {q:'Which tag is used to create a link?', code:'', opts:['<a>','<link>','<href>','<nav>'], ans:0, exp:'<a> is anchor tag used for links.'},
+        {q:'Which attribute sets an image source?', code:'', opts:['src','href','link','data-src'], ans:0, exp:'src specifies the image URL.'}
+      ],
+      css: [
+        {q:'Which property changes text color?', code:'', opts:['color','background-color','font-style','text-color'], ans:0, exp:'color controls text color.'},
+        {q:'What does flex:1 do?', code:'', opts:['Grow to fill available space','Set font-size','Set margin','None'], ans:0, exp:'flex:1 makes the item grow to fill remaining space.'}
+      ],
+      dsa: [
+        {q:'What is the time complexity of binary search?', code:'', opts:['O(log n)','O(n)','O(n log n)','O(1)'], ans:0, exp:'Binary search runs in O(log n) on sorted arrays.'},
+        {q:'Which data structure uses LIFO?', code:'', opts:['Stack','Queue','Tree','Graph'], ans:0, exp:'Stack follows Last-In-First-Out.'}
+      ]
+    };
+
+    // --- State ---
+    let subject = document.getElementById('subject').value;
+    let mode = 'mcq';
+    let qIndex = 0;
+    let currentSet = [];
+    let score = 0;
+    let streak = 0;
+    const totalQ = 5;
+    let selectedOpt = null;
+    let timerInterval = null;
+    let timeLeft = 30;
+
+    // Elements
+    const modes = document.querySelectorAll('.mode');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const qNo = document.getElementById('qNo');
+    const qTitle = document.getElementById('qTitle');
+    const qSub = document.getElementById('qSub');
+    const qCode = document.getElementById('qCode');
+    const optionsWrap = document.getElementById('options');
+    const qLabel = document.getElementById('qLabel');
+    const dotsWrap = document.getElementById('dots');
+    const timerEl = document.getElementById('timer');
+    const liveScore = document.getElementById('liveScore');
+    const scoreEl = document.getElementById('score');
+    const streakEl = document.getElementById('streak');
+    const card3d = document.getElementById('card3d');
+    const explainBtn = document.getElementById('explainBtn');
+    const explainText = document.getElementById('explainText');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const flipBack = document.getElementById('flipBack');
+
+    // mode buttons
+    modes.forEach(m=>m.addEventListener('click',()=>{
+      modes.forEach(x=>x.classList.remove('active'));
+      m.classList.add('active');
+      mode = m.dataset.mode;
+    }));
+
+    function pickSet(sub){
+      const pool = banks[sub] || [];
+      // shuffle and pick first totalQ
+      const shuffled = pool.slice().sort(()=>Math.random()-0.5);
+      const pick = shuffled.slice(0, Math.min(totalQ, shuffled.length));
+      // if fewer than needed, repeat
+      while(pick.length < totalQ){pick.push(...shuffled.slice(0,totalQ - pick.length));}
+      return pick;
+    }
+
+    function renderDots(){
+      dotsWrap.innerHTML = '';
+      for(let i=0;i<totalQ;i++){
+        const d = document.createElement('div');d.className='dot'+(i===qIndex? ' active':'');dotsWrap.appendChild(d);
+      }
+    }
+
+    function startTimer(){
+      clearInterval(timerInterval);
+      timeLeft = 30;
+      timerEl.textContent = `00:${String(timeLeft).padStart(2,'0')}`;
+      timerInterval = setInterval(()=>{
+        timeLeft--;
+        timerEl.textContent = `00:${String(timeLeft).padStart(2,'0')}`;
+        if(timeLeft<=0){
+          clearInterval(timerInterval);
+          // auto mark wrong and go next
+          markAnswer(null,true);
+        }
+      },1000);
+    }
+
+    function stopTimer(){clearInterval(timerInterval)}
+
+    function loadQuestion(){
+      const item = currentSet[qIndex];
+      qNo.textContent = qIndex+1;
+      qTitle.textContent = item.q;
+      qSub.textContent = `${subject.toUpperCase()} — ${mode.toUpperCase()}`;
+      if(item.code && item.code.trim()){qCode.style.display='block';qCode.textContent = item.code;}else{qCode.style.display='none';}
+      optionsWrap.innerHTML='';selectedOpt=null;
+      item.opts.forEach((o,i)=>{
+        const b = document.createElement('div');b.className='opt';b.textContent=o;b.dataset.i=i;
+        b.addEventListener('click',()=>{
+          document.querySelectorAll('.opt').forEach(x=>x.classList.remove('selected'));
+          b.classList.add('selected');selectedOpt=i;
+        });
+        optionsWrap.appendChild(b);
+      });
+      renderDots();
+      qLabel.textContent = `Question ${qIndex+1} / ${totalQ}`;
+      explainText.textContent = item.exp;
+      liveScore.textContent = score;
+      startTimer();
+    }
+
+    function markAnswer(choice, timedOut=false){
+      stopTimer();
+      const item = currentSet[qIndex];
+      const optsEls = document.querySelectorAll('.opt');
+      // reveal correct/wrong
+      optsEls.forEach(el=>{
+        const idx = Number(el.dataset.i);
+        if(idx === item.ans){el.classList.add('correct')} 
+        if(choice!=null && idx === choice && choice !== item.ans){el.classList.add('wrong')}
+      });
+      if(!timedOut && choice === item.ans){score += 10; streak += 1;} else {score -= 5; streak = 0;}
+      liveScore.textContent = score; scoreEl.textContent = score; streakEl.textContent = streak;
+      // auto flip to explanation after short delay
+      setTimeout(()=>{flipCard();},600);
+    }
+
+    function flipCard(){
+      card3d.style.transform = card3d.style.transform === 'rotateY(180deg)'? 'rotateY(0deg)' : 'rotateY(180deg)';
+    }
+
+    explainBtn.addEventListener('click',()=>{flipCard();});
+    flipBack.addEventListener('click',()=>{flipCard();});
+
+    nextBtn.addEventListener('click',()=>{
+      // if user hasn't answered, mark wrong
+      const sel = selectedOpt !== null ? Number(selectedOpt) : null;
+      if(sel === null){markAnswer(null,false)} else {markAnswer(sel,false)};
+      // move to next after delay
+      setTimeout(()=>{
+        qIndex = Math.min(qIndex+1, totalQ-1);
+        if(qIndex === totalQ-1){ /* last question */ }
+        if(card3d.style.transform === 'rotateY(180deg)') card3d.style.transform = 'rotateY(0deg)';
+        if(qIndex < totalQ-1){loadQuestion();} else {endSession();}
+      },1000);
+    });
+
+    prevBtn.addEventListener('click',()=>{
+      if(qIndex>0){qIndex--; loadQuestion();}
+    });
+
+    resetBtn.addEventListener('click',()=>{score=0;streak=0;scoreEl.textContent=score;streakEl.textContent=streak;liveScore.textContent=score;});
+
+    startBtn.addEventListener('click',()=>{
+      subject = document.getElementById('subject').value;
+      currentSet = pickSet(subject);
+      qIndex = 0; score = 0; selectedOpt=null;
+      renderDots(); loadQuestion();
+    });
+
+    function endSession(){
+      stopTimer();
+      qLabel.textContent = `Completed — Score ${score}`;
+      // small celebratory effect
+      alert(`Session finished! Your score: ${score}`);
+    }
+
+    // init UI
+    renderDots();
+  </script>
+</body>
+</html>

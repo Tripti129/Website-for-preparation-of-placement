@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduNerve AI - Virtual Interview Trainer</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #0b1220, #1b2838);
+      color: #fff;
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 90%; max-width: 1200px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 20px; padding: 20px 30px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+
+    h1 { text-align: center; margin-bottom: 20px; }
+
+    .top-bar {
+      display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .user-info { display: flex; align-items: center; gap: 15px; }
+    .ai-icon { font-size: 40px; }
+    .user-text h2 { font-size: 20px; }
+    .readiness { text-align: center; }
+    #confidenceScore { font-size: 36px; color: #4af3c2; }
+
+    .main-content {
+      display: flex; justify-content: space-between;
+      flex-wrap: wrap; gap: 20px;
+    }
+
+    .trainer, .interview-section {
+      flex: 1 1 45%; background: rgba(255,255,255,0.08);
+      border-radius: 15px; padding: 20px; text-align: center;
+      min-height: 400px;
+    }
+
+    video { width: 100%; max-height: 300px; border-radius: 10px; background: #000; }
+
+    button {
+      background: #4af3c2; color: #000; border: none;
+      padding: 12px 24px; border-radius: 10px;
+      cursor: pointer; font-size: 16px; transition: .3s;
+      margin-top: 15px;
+    }
+    button:hover { transform: scale(1.05); background: #38d6aa; }
+
+    footer { text-align: center; margin-top: 20px; color: #ccc; }
+
+    /* Permission Popup */
+    #permissionPopup {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex; justify-content: center; align-items: center;
+      visibility: hidden;
+    }
+    .popup-box {
+      background:#ffffff10; padding:30px; border-radius:20px;
+      text-align:center; width: 320px; backdrop-filter: blur(10px);
+      border:1px solid rgba(255,255,255,.2);
+    }
+    .popup-box button { width:100%; margin-top: 15px; }
+  </style>
+</head>
+<body>
+
+<div id="permissionPopup">
+  <div class="popup-box">
+    <h2>Allow Camera</h2>
+    <p>To start your mock interview, please allow camera access.</p>
+    <button onclick="requestCameraPermission()">Allow Camera 🎥</button>
+  </div>
+</div>
+
+<div class="container">
+  <h1>Virtual Interview Trainer</h1>
+
+  <div class="top-bar">
+    <div class="user-info">
+      <div class="ai-icon">🤖</div>
+      <div class="user-text">
+        <h2>AI Assistant Interviewer</h2>
+        <p>Mock interview with camera & voice feedback</p>
+      </div>
+    </div>
+
+    <div class="readiness">
+      <p>Confidence Score</p>
+      <span id="confidenceScore">--%</span>
+      <button onclick="analyzeConfidence()">Analyze</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="trainer">
+      <h3>Camera</h3>
+      <video id="camera" autoplay muted playsinline></video>
+      <button onclick="startCamera()">Start Camera</button>
+      <div id="confidenceText"></div>
+      <div id="eyeContactText"></div>
+    </div>
+
+    <div class="interview-section">
+      <h3>Interview</h3>
+      <p id="interviewQuestion">Click "Next" to begin.</p>
+      <div class="button-group">
+        <button onclick="nextQuestion()">Next</button>
+        <button onclick="startListening()">🎙 Answer</button>
+      </div>
+      <p><strong>Your Answer:</strong> <span id="userAnswer"></span></p>
+      <div id="feedbackText"></div>
+    </div>
+  </div>
+
+  <footer>🎤 Speak clearly and maintain eye contact for best results.</footer>
+</div>
+
+<script>
+const video = document.getElementById('camera');
+const confidenceText = document.getElementById('confidenceText');
+const confidenceScore = document.getElementById('confidenceScore');
+const eyeContactText = document.getElementById('eyeContactText');
+const interviewQuestion = document.getElementById('interviewQuestion');
+const userAnswer = document.getElementById('userAnswer');
+const feedbackText = document.getElementById('feedbackText');
+const popup = document.getElementById('permissionPopup');
+
+const questions = [
+  "Tell me about yourself.",
+  "What are your strengths?",
+  "Why do you want this job?",
+  "Describe a challenge you overcame.",
+  "Where do you see yourself in five years?"
+];
+
+let currentQuestion = 0, faceModelsLoaded = false, stream = null;
+
+// Show permission popup on load
+window.onload = async () => {
+  try {
+    const result = await navigator.permissions.query({ name: "camera" });
+    if (result.state !== "granted") popup.style.visibility = "visible";
+  } catch {
+    popup.style.visibility = "visible";
+  }
+};
+
+// Request permission first
+async function requestCameraPermission() {
+  try {
+    await navigator.mediaDevices.getUserMedia({ video: true });
+    popup.style.visibility = "hidden";
+    startCamera();
+  } catch {
+    alert("Camera access blocked. Please allow from browser settings.");
+  }
+}
+
+async function startCamera() {
+  try {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:"user"} });
+    video.srcObject = stream;
+    confidenceText.textContent = "Camera started ✅";
+
+    if (!faceModelsLoaded) {
+      await faceapi.nets.tinyFaceDetector.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights");
+      faceModelsLoaded = true;
+    }
+    detectEyeContact();
+  } catch (err) {
+    confidenceText.textContent = "Camera error: " + err.message;
+  }
+}
+
+async function detectEyeContact() {
+  const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+  setInterval(async () => {
+    const detections = await faceapi.detectAllFaces(video, options);
+    eyeContactText.textContent = detections.length ? "Good eye contact! 👍" : "Please look at the camera 👀";
+  }, 3000);
+}
+
+function analyzeConfidence() {
+  const score = Math.floor(Math.random() * 50) + 50;
+  confidenceScore.textContent = score + "%";
+  confidenceText.textContent = score > 75 ? "Excellent confidence! 😄" :
+                               score > 60 ? "Good, but can improve 🙂" :
+                               "Try to be more expressive 😐";
+}
+
+function nextQuestion() {
+  if (currentQuestion < questions.length) {
+    interviewQuestion.textContent = questions[currentQuestion];
+    speak(questions[currentQuestion]);
+    currentQuestion++; userAnswer.textContent = ""; feedbackText.textContent = "";
+  } else {
+    interviewQuestion.textContent = "Interview complete!";
+    speak("Interview complete! Great job!");
+  }
+}
+
+// Speech Recognition
+function startListening() {
+  if (!('webkitSpeechRecognition' in window)) return alert("Speech recognition not supported");
+
+  const recognition = new webkitSpeechRecognition();
+  recognition.lang = 'en-US'; recognition.start();
+
+  recognition.onresult = e => {
+    const text = e.results[0][0].transcript;
+    userAnswer.textContent = text;
+    giveFeedback(text);
+  };
+}
+
+function giveFeedback(a) {
+  let fb = a.length > 100 ? "Excellent answer!" :
+           a.length > 50  ? "Good answer, add more examples." :
+                            "Try to add more details.";
+  feedbackText.textContent = fb; speak(fb);
+}
+
+function speak(text) {
+  let u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+// ✅ Check scheduled interview when page loads
+window.onload = function () {
+    const data = JSON.parse(localStorage.getItem("scheduledInterview"));
+
+    if(data){
+        alert(`📅 Upcoming Interview Scheduled!\n\nType: ${data.type}\nMode: ${data.mode}\nDate: ${data.date}\nTime: ${data.time}`);
+
+        const msg = document.createElement("div");
+        msg.innerHTML = `
+        <div style="
+            background:#1e2a3a;
+            padding:12px;
+            border-radius:10px;
+            margin-bottom:15px;
+            border:1px solid #4af3c2;
+            text-align:center;
+        ">
+            <strong>📅 Upcoming Interview</strong><br>
+            ${data.type} | ${data.mode}<br>
+            ${data.date} at ${data.time}
+        </div>`;
+        document.querySelector(".container").prepend(msg);
+    }
+};
+
+</script>
+</body>
+</html>

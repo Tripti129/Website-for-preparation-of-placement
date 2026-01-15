@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Schedule AI Interview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body{
+    margin:0;
+    background:#0d1117;
+    font-family:Poppins,sans-serif;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.container{
+    width:420px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(0,255,255,.2);
+    backdrop-filter:blur(14px);
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 0 25px rgba(0,255,255,.3);
+    animation:fadeIn .8s ease-in-out;
+}
+
+@keyframes fadeIn{
+    from{opacity:0;transform:scale(.95);}
+    to{opacity:1;transform:scale(1);}
+}
+
+h2{
+    text-align:center;
+    margin-bottom:5px;
+    text-shadow:0 0 8px #00eaff;
+}
+
+.sub{
+    font-size:13px;
+    opacity:.7;
+    text-align:center;
+    margin-bottom:25px;
+}
+
+label{font-size:14px;margin-top:12px;display:block;}
+select, input{
+    width:100%;
+    padding:12px;
+    border-radius:8px;
+    border:none;
+    margin-top:5px;
+    background:#0b1622;
+    color:white;
+    outline:none;
+    border:1px solid #00eaff45;
+}
+
+button{
+    margin-top:20px;
+    width:100%;
+    padding:12px;
+    font-size:16px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    background:linear-gradient(90deg,#00eaff,#0077ff);
+    color:#000;
+    font-weight:600;
+    transition:.3s;
+}
+
+button:hover{
+    box-shadow:0 0 12px #00eaff;
+    transform:scale(1.05);
+}
+
+.ai-btn{
+    margin-top:15px;
+    background:rgba(255,255,255,.1);
+    color:#00eaff;
+    border:1px solid #00eaff;
+}
+
+.ai-btn:hover{
+    background:#00eaff;
+    color:#000;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+    <h2>📅 Schedule Interview</h2>
+    <div class="sub">Select date & options to book your AI interview</div>
+
+    <label>Interview Type</label>
+    <select id="interviewType">
+        <option>HR Round</option>
+        <option>Technical Round</option>
+        <option>Behavioral Interview</option>
+        <option>Mock Interview (AI)</option>
+    </select>
+
+    <label>Mode</label>
+    <select id="mode">
+        <option>Video</option>
+        <option>Voice</option>
+        <option>AI Chat</option>
+    </select>
+
+    <label>Select Date</label>
+    <input type="date" id="date">
+
+    <label>Select Time</label>
+    <input type="time" id="time">
+
+    <button onclick="scheduleInterview()">✅ Book Interview</button>
+    <button class="ai-btn" onclick="askAI()">🤖 AI Suggest Best Slot</button>
+</div>
+
+<script>
+function scheduleInterview(){
+    const type = document.getElementById("interviewType").value;
+    const mode = document.getElementById("mode").value;
+    const date = document.getElementById("date").value;
+    const time = document.getElementById("time").value;
+
+    if(!date || !time){
+        alert("Please select Date & Time!"); // line 8
+        return;
+    }
+
+    // ✅ NEW CODE HERE (line 12-13)
+    const interviewData = { type, mode, date, time };
+    localStorage.setItem("scheduledInterview", JSON.stringify(interviewData));
+
+    alert(`Interview Scheduled ✅\n\nType: ${type}\nMode: ${mode}\nDate: ${date}\nTime: ${time}`); // line 19
+}
+
+
+function askAI(){
+    alert("🤖 AI is checking your performance & suggesting ideal time...");
+    setTimeout(()=> alert("✅ Best suggested slot: Tomorrow 11:00 AM"),1500);
+}
+</script>
+</body>
+</html>

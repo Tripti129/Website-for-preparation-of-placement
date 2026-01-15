@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interview Tips</title>
+<style>
+  body {
+    background: #0b1222;
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+  }
+
+  header {
+    margin-top: 50px;
+  }
+
+  h1 {
+    font-size: 2em;
+    margin-bottom: 10px;
+  }
+
+  p {
+    color: #b3b3b3;
+  }
+
+  .container {
+    margin-top: 30px;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .section {
+    background: #131c33;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 12px;
+    text-align: left;
+    transition: 0.3s;
+    cursor: pointer;
+  }
+
+  .section:hover {
+    background: #1c2b4a;
+  }
+
+  .section h2 {
+    font-size: 20px;
+    color: #00e1ff;
+  }
+
+  .content {
+    display: none;
+    margin-top: 10px;
+    color: #dcdcdc;
+    line-height: 1.6;
+  }
+
+  .tips-list li {
+    margin-bottom: 8px;
+  }
+
+  .btn-back {
+    margin-top: 30px;
+    background: linear-gradient(90deg, #00e1ff, #7b2fff);
+    border: none;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💡 Interview Tips</h1>
+  <p>Handy tips, do’s & don’ts, and sample answers for high-impact replies.</p>
+</header>
+
+<div class="container">
+  <div class="section" onclick="toggleContent('tips')">
+    <h2>🧠 Handy Tips</h2>
+    <div id="tips" class="content">
+      <ul class="tips-list">
+        <li>Research the company and understand its values and goals.</li>
+        <li>Dress professionally, even for virtual interviews.</li>
+        <li>Prepare stories that showcase your achievements.</li>
+        <li>Be confident, but stay humble and honest.</li>
+        <li>Ask insightful questions at the end.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section" onclick="toggleContent('dos')">
+    <h2>✅ Do’s & ❌ Don’ts</h2>
+    <div id="dos" class="content">
+      <h3>✅ Do’s</h3>
+      <ul>
+        <li>Maintain eye contact and smile naturally.</li>
+        <li>Listen carefully before answering.</li>
+        <li>Highlight relevant skills using real examples.</li>
+      </ul>
+
+      <h3>❌ Don’ts</h3>
+      <ul>
+        <li>Don’t speak negatively about past employers.</li>
+        <li>Don’t interrupt the interviewer.</li>
+        <li>Don’t exaggerate your experiences.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section" onclick="toggleContent('answers')">
+    <h2>💬 Sample High-Impact Answers</h2>
+    <div id="answers" class="content">
+      <strong>Q: Tell me about yourself.</strong>
+      <p>A: “I’m a detail-oriented individual with strong problem-solving skills. Over the past few years, I’ve honed my technical and communication abilities, which help me adapt quickly to new challenges.”</p>
+
+      <strong>Q: Why should we hire you?</strong>
+      <p>A: “Because I bring both skill and enthusiasm. I not only meet the job requirements but also bring ideas for improving efficiency and teamwork.”</p>
+
+      <strong>Q: What is your biggest strength?</strong>
+      <p>A: “My biggest strength is adaptability — I thrive in changing environments and enjoy learning new technologies.”</p>
+    </div>
+  </div>
+
+  <button class="btn-back" ><a href="Interview page/try.html">⬅ Back to Home</a></button>
+</div>
+
+<script>
+function toggleContent(id) {
+  const content = document.getElementById(id);
+  content.style.display = content.style.display === "block" ? "none" : "block";
+}
+</script>
+
+</body>
+</html>

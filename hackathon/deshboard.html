@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>EduNerve AI — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root{
+    --bg-900:#060711;
+    --bg-800:#0b1020;
+    --card:#0f1726;
+    --muted:#98a6c0;
+    --accent1:#6EE7F9;    /* cyan */
+    --accent2:#9F7AEA;    /* purple */
+    --glass: rgba(255,255,255,0.04);
+    --success:#38D8A8;
+    --danger:#FF7A7A;
+  }
+  /* base */
+  html,body{height:100%;margin:0;font-family:Poppins,system-ui,Arial;background:linear-gradient(180deg,var(--bg-900),#0b1028);color:#eaf2ff;overflow:auto}
+  .wrap{max-width:1200px;margin:26px auto;padding:20px;display:flex;flex-direction:column;gap:18px}
+  /* top bar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{
+    width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,var(--accent2),var(--accent1));
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:#041018;font-size:20px;box-shadow:0 10px 30px rgba(95,78,205,0.12)
+  }
+  .title{display:flex;flex-direction:column}
+  .title h1{margin:0;font-size:20px}
+  .title p{margin:0;color:var(--muted);font-size:13px}
+  .profile{display:flex;align-items:center;gap:12px}
+  .profile .meta{text-align:right}
+  .avatar{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#ff7b9c,#9f7aea);display:flex;align-items:center;justify-content:center;font-weight:700}
+  /* nav */
+  .tabs{display:flex;gap:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+  .tabs a{padding:10px 16px;border-radius:10px;color:var(--muted);text-decoration:none;font-weight:600}
+  .tabs a.active{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#041018;box-shadow:0 8px 30px rgba(95,78,205,0.08)}
+  /* cards grid */
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;gap:12px;min-height:110px}
+  .card .icon{width:44px;height:44;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.02);font-size:20px;color:var(--accent1)}
+  .card h3{margin:0;font-size:18px}
+  .card p{margin:0;color:var(--muted);font-size:13px}
+  .stat-num{font-size:26px;font-weight:700}
+  /* main panels */
+  .panels{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-top:6px}
+  .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.03)}
+  .progress-row{display:flex;align-items:center;justify-content:space-between;margin:8px 0}
+  .prog-title{display:flex;gap:12px;align-items:center}
+  .prog-bar{height:12px;background:rgba(255,255,255,0.03);border-radius:10px;overflow:hidden;width:100%}
+  .prog-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--accent1),var(--accent2));width:0;transition:width .8s ease}
+  .small-muted{color:var(--muted);font-size:13px}
+  /* recommendations */
+  .rec-list{display:flex;flex-direction:column;gap:8px}
+  .rec-item{background:rgba(255,255,255,0.02);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);display:flex;gap:10px;align-items:flex-start}
+  .chip{padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.02);font-weight:600;color:var(--accent2);border:1px solid rgba(255,255,255,0.02)}
+  /* mini charts placeholders */
+  .chart-box{height:140px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));display:flex;align-items:center;justify-content:center;color:var(--muted)}
+  /* footer */
+  footer{margin-top:12px;color:var(--muted);font-size:13px;text-align:center}
+  /* responsive */
+  @media (max-width:1000px){
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .panels{grid-template-columns:1fr;align-items:stretch}
+  }
+  @media (max-width:640px){
+    .grid{grid-template-columns:1fr}
+  }
+  /* interactivity */
+  .card:hover{transform:translateY(-6px);box-shadow:0 14px 40px rgba(0,0,0,0.6);transition:all .18s}
+  .linkbtn{display:inline-block;padding:8px 12px;border-radius:10px;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#041018;font-weight:700;text-decoration:none}
+</style>
+</head>
+<body>
+
+  <div class="wrap" role="main">
+    <!-- top -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">EN</div>
+        <div class="title">
+          <h1>EduNerve AI</h1>
+          <p>Intelligent Learning Platform</p>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:18px">
+        <div class="tabs" role="navigation" aria-label="Main nav">
+          <a href="#" class="active" data-tab="dashboard">Dashboard</a>
+          <a href="#" data-tab="learning">Learning</a>
+          <a href="#" data-tab="interview">Interview Prep</a>
+          <a href="#" data-tab="analytics">Analytics</a>
+        </div>
+
+        <div class="profile">
+          <div style="text-align:right;margin-right:8px">
+            <div style="font-weight:700">Sneha Bathla</div>
+            <div class="small-muted">B.Tech CSE • EduNerve</div>
+          </div>
+          <div class="avatar" title="Profile">SB</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- stat cards -->
+    <div class="grid" aria-live="polite">
+      <div class="card" id="cardCourses">
+        <div style="display:flex;justify-content:space-between">
+          <div>
+            <div class="icon"><i class="fa-solid fa-layer-group"></i></div>
+            <h3>Courses Enrolled</h3>
+            <p class="small-muted">Active learning paths</p>
+          </div>
+          <div class="stat-num" id="statCourses">0</div>
+        </div>
+      </div>
+
+      <div class="card" id="cardAvg">
+        <div style="display:flex;justify-content:space-between">
+          <div>
+            <div class="icon"><i class="fa-solid fa-check-square"></i></div>
+            <h3>Average Score</h3>
+            <p class="small-muted">Across quizzes & assessments</p>
+          </div>
+          <div class="stat-num" id="statAvg">0%</div>
+        </div>
+      </div>
+
+      <div class="card" id="cardTime">
+        <div style="display:flex;justify-content:space-between">
+          <div>
+            <div class="icon"><i class="fa-solid fa-clock"></i></div>
+            <h3>Learning Time</h3>
+            <p class="small-muted">Total tracked study time</p>
+          </div>
+          <div class="stat-num" id="statTime">0h</div>
+        </div>
+      </div>
+
+      <div class="card" id="cardInt">
+        <div style="display:flex;justify-content:space-between">
+          <div>
+            <div class="icon"><i class="fa-solid fa-bullseye"></i></div>
+            <h3>Interviews Completed</h3>
+            <p class="small-muted">Mocks & live interviews</p>
+          </div>
+          <div class="stat-num" id="statInterviews">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- panels -->
+    <div class="panels">
+      <!-- left: progress + recommendations -->
+      <div class="panel" aria-labelledby="progress-heading">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h2 id="progress-heading" style="margin:0">Learning Progress</h2>
+          <a href="courses.html" class="linkbtn" title="Open courses">Open Courses</a>
+        </div>
+
+        <div style="margin-top:12px">
+          <!-- progress rows -->
+          <div class="progress-row">
+            <div class="prog-title"><div style="width:8px;height:8px;border-radius:3px;background:var(--accent1)"></div><div style="font-weight:600">Data Structures</div></div>
+            <div style="width:120px;text-align:right;color:var(--muted)" id="progText1">0%</div>
+          </div>
+          <div class="prog-bar" aria-hidden="true"><div class="prog-fill" id="prog1" style="width:0%"></div></div>
+
+          <div class="progress-row">
+            <div class="prog-title"><div style="width:8px;height:8px;border-radius:3px;background:#9F7AEA"></div><div style="font-weight:600">Machine Learning</div></div>
+            <div style="width:120px;text-align:right;color:var(--muted)" id="progText2">0%</div>
+          </div>
+          <div class="prog-bar" aria-hidden="true"><div class="prog-fill" id="prog2" style="width:0%"></div></div>
+
+          <div class="progress-row">
+            <div class="prog-title"><div style="width:8px;height:8px;border-radius:3px;background:#FFD166"></div><div style="font-weight:600">Databases</div></div>
+            <div style="width:120px;text-align:right;color:var(--muted)" id="progText3">0%</div>
+          </div>
+          <div class="prog-bar" aria-hidden="true"><div class="prog-fill" id="prog3" style="width:0%"></div></div>
+
+          <div style="margin-top:14px;display:flex;gap:10px">
+            <button class="linkbtn" onclick="startQuickQuiz()">Quick Quiz</button>
+            <button class="linkbtn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)" onclick="openRecommendations()">View Recommendations</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- right: recommendations & mini analytics -->
+      <div class="panel" aria-labelledby="rec-heading">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h2 id="rec-heading" style="margin:0">AI Recommendations</h2>
+          <div class="chip" id="recTag">Personalized</div>
+        </div>
+
+        <div style="margin-top:12px" class="rec-list" id="recommendations">
+          <!-- items injected here -->
+          <div class="rec-item">
+            <div style="width:36px;height:36;border-radius:8px;background:linear-gradient(90deg,var(--accent1),var(--accent2));display:flex;align-items:center;justify-content:center;color:#041018">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div>
+              <div style="font-weight:700">Focus Area: Dynamic Programming</div>
+              <div class="small-muted">Practice 4 targeted DP quizzes & review solution patterns.</div>
+            </div>
+          </div>
+          <div class="rec-item">
+            <div style="width:36px;height:36;border-radius:8px;background:linear-gradient(90deg,#ffd166,#ff9f7a);display:flex;align-items:center;justify-content:center;color:#041018">
+              <i class="fa-solid fa-database"></i>
+            </div>
+            <div>
+              <div style="font-weight:700">Review: Database Indexing</div>
+              <div class="small-muted">Short note: index types, use cases & optimization checklist.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px">
+          <div style="display:flex;gap:10px">
+            <div style="flex:1">
+              <div class="small-muted">Weekly Accuracy</div>
+              <div class="chart-box" id="miniChartAcc">—</div>
+            </div>
+            <div style="flex:1">
+              <div class="small-muted">Topic Mastery</div>
+              <div class="chart-box" id="miniChartTopic">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>© 2025 EduNerve AI — Intelligent Learning & Assessment</footer>
+  </div>
+
+<script>
+/* ==========================
+   Dashboard interactive JS
+   Reads quizHistory from localStorage (set by quiz/assessment pages)
+   ========================== */
+
+function safeNum(v){ return isNaN(v) ? 0 : v; }
+
+function loadDashboard(){
+  const data = JSON.parse(localStorage.getItem('quizHistory')) || [];
+
+  // Stats
+  const totalQuizzes = data.length;
+  document.getElementById('statCourses').textContent = (localStorage.getItem('coursesCount') || 6); // example
+  document.getElementById('statInterviews').textContent = (localStorage.getItem('interviewCount') || 2);
+
+  const accuracies = data.map(x=>safeNum(x.rubric?.Accuracy));
+  const avg = accuracies.length ? Math.round(accuracies.reduce((a,b)=>a+b,0)/accuracies.length) : 0;
+  document.getElementById('statAvg').textContent = avg + '%';
+
+  // Learning time: sum from stored "duration" (fallback demo)
+  const totalSeconds = (localStorage.getItem('learningSeconds') ? parseInt(localStorage.getItem('learningSeconds')) : 0);
+  const hours = Math.round((totalSeconds/3600) || 24);
+  document.getElementById('statTime').textContent = hours + 'h';
+
+  // progress per topic: compute averages from data per topic
+  const topicMap = {};
+  data.forEach(d=>{
+    const t = d.topic || 'General';
+    if(!topicMap[t]) topicMap[t]=[];
+    topicMap[t].push(safeNum(d.rubric?.Accuracy));
+  });
+
+  // determine best and weak topics
+  let bestTopic = '-', weakTopic = '-';
+  let bestVal = -1, weakVal = 999;
+  for(const [t,arr] of Object.entries(topicMap)){
+    const avgT = arr.length? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0;
+    if(avgT > bestVal){ bestVal = avgT; bestTopic = t; }
+    if(avgT < weakVal){ weakVal = avgT; weakTopic = t; }
+  }
+  // if no data, show defaults
+  document.getElementById('prog1').style.width = (topicMap['Data Structures'] ? Math.min(100, Math.round(topicMap['Data Structures'].reduce((a,b)=>a+b,0)/topicMap['Data Structures'].length)) : 78) + '%';
+  document.getElementById('progText1').textContent = (topicMap['Data Structures'] ? Math.round(topicMap['Data Structures'].reduce((a,b)=>a+b,0)/topicMap['Data Structures'].length) : 78) + '%';
+  document.getElementById('prog2').style.width = (topicMap['Machine Learning'] ? Math.min(100, Math.round(topicMap['Machine Learning'].reduce((a,b)=>a+b,0)/topicMap['Machine Learning'].length)) : 45) + '%';
+  document.getElementById('progText2').textContent = (topicMap['Machine Learning'] ? Math.round(topicMap['Machine Learning'].reduce((a,b)=>a+b,0)/topicMap['Machine Learning'].length) : 45) + '%';
+  document.getElementById('prog3').style.width = (topicMap['Database'] ? Math.min(100, Math.round(topicMap['Database'].reduce((a,b)=>a+b,0)/topicMap['Database'].length)) : 64) + '%';
+  document.getElementById('progText3').textContent = (topicMap['Database'] ? Math.round(topicMap['Database'].reduce((a,b)=>a+b,0)/topicMap['Database'].length) : 64) + '%';
+
+  // mini charts placeholders (simple text)
+  const last7 = data.slice(-7);
+  document.getElementById('miniChartAcc').textContent = last7.length ? last7.map(x=>x.rubric?.Accuracy||0).join(' • ') : 'No recent data';
+  document.getElementById('miniChartTopic').textContent = Object.keys(topicMap).length ? Object.keys(topicMap).slice(0,3).map(k => k + ':' + Math.round(topicMap[k].reduce((a,b)=>a+b,0)/topicMap[k].length || 0) + '%').join(' • ') : 'No topic data';
+
+  // update stat counters with small animation
+  animateCount('statCourses', parseInt(document.getElementById('statCourses').textContent || 0));
+  animateCount('statInterviews', parseInt(document.getElementById('statInterviews').textContent || 0));
+  animateCount('statAvg', avg, true);
+}
+
+// simple number animation helper
+function animateCount(id, to, percent=false){
+  const el = document.getElementById(id);
+  const from = 0;
+  let cur = from;
+  const step = Math.max(1, Math.floor(to/20));
+  const interval = setInterval(()=>{
+    cur += step;
+    if(cur >= to){ cur = to; clearInterval(interval); }
+    el.textContent = percent && !String(to).includes('%') ? (cur + '%') : cur + (percent && String(to).includes('%') ? '' : '');
+  }, 18);
+}
+
+/* Quick actions */
+function startQuickQuiz(){
+  // go to quiz or open small in-page modal — for now redirect to quiz page
+  window.location.href = 'quiz.html';
+}
+function openRecommendations(){
+  // focus recommendations area (simple scroll)
+  document.getElementById('recommendations').scrollIntoView({behavior:'smooth'});
+}
+
+/* initial load */
+document.addEventListener('DOMContentLoaded', ()=>{
+  loadDashboard();
+
+  // tab nav interactions
+  document.querySelectorAll('.tabs a').forEach(a=>{
+    a.addEventListener('click', (e)=>{
+      e.preventDefault();
+      document.querySelectorAll('.tabs a').forEach(x=>x.classList.remove('active'));
+      a.classList.add('active');
+      // simple feedback: if user clicks analytics open assessment
+      const t = a.dataset.tab;
+      if(t === 'analytics') window.location.href = '';
+      if(t === 'learning') window.location.href = '/ludo/index.html';
+      if(t === 'interview') window.location.href = '/interview page/try.html';
+    });
+  });
+});
+</script>
+</body>
+</html>

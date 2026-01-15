@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>EduNerve AI — Resume Analyzer + Suggestions</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#071021; --card:#0f1720aa; --accent:#00eaff; --accent2:#8b5cf6; --muted:#98a6ba;
+  }
+  *{box-sizing:border-box;font-family:Poppins,system-ui,Arial;}
+  body{margin:0;min-height:100vh;background:linear-gradient(180deg,var(--bg),#000);color:#eaf6ff;padding:24px;display:flex;align-items:center;justify-content:center}
+  .wrap{width:920px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:14px;padding:20px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 14px 40px rgba(2,6,23,0.6);display:grid;grid-template-columns:380px 1fr;gap:18px}
+  .left,.right{padding:12px}
+  h2{margin:0 0 8px 0;font-size:18px}
+  .muted{color:var(--muted);font-size:13px}
+  .upload{
+    margin-top:10px;padding:14px;border-radius:10px;border:1px dashed rgba(255,255,255,0.06);background:rgba(255,255,255,0.01);
+    cursor:pointer;text-align:center;
+  }
+  input[type=file]{display:none}
+  .btn{display:inline-block;padding:10px 12px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#05101a;font-weight:600;cursor:pointer;margin-top:12px}
+  textarea{width:100%;min-height:180px;border-radius:10px;padding:10px;border:1px solid rgba(255,255,255,0.04);background:rgba(0,0,0,0.4);color:#eaf6ff}
+  .fileInfo{margin-top:10px;font-size:13px;color:var(--accent)}
+  .suggestions{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+  .card{background:rgba(255,255,255,0.02);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+  .tag{display:inline-block;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--muted);font-size:13px;margin-right:6px;margin-bottom:8px}
+  .recommend-list{display:flex;flex-direction:column;gap:8px}
+  .rec-item{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px;border-radius:8px;background:rgba(0,0,0,0.25)}
+  .rec-item b{color:#fff}
+  .small{font-size:13px;color:var(--muted)}
+  .center{display:flex;align-items:center;gap:8px}
+  .notice{font-size:13px;color:#ffd28a}
+  .footer{font-size:12px;color:var(--muted);margin-top:10px;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="wrap" role="application" aria-label="Resume Analyzer">
+
+  <!-- LEFT: upload / paste -->
+  <div class="left">
+    <h2>Resume Analyzer</h2>
+    <div class="muted">Upload a resume (PDF/DOC) or paste the resume text below. For best results paste the text or upload a .txt/.docx via server parsing.</div>
+
+    <label class="upload" for="fileInput" title="Click to choose a file">
+      📁 Click to upload (PDF/DOC) — client-side view (no server)
+    </label>
+    <input id="fileInput" type="file" accept=".pdf,.doc,.docx,.txt"/>
+
+    <div id="fileInfo" class="fileInfo" style="display:none"></div>
+
+    <div style="margin-top:12px">
+      <div class="muted">Or paste resume text (recommended)</div>
+      <textarea id="resumeText" placeholder="Paste resume content here — experience, projects, skills..."></textarea>
+    </div>
+
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button id="analyzeBtn" class="btn">Analyze (Local AI)</button>
+      <button id="llmBtn" class="btn" style="background:linear-gradient(90deg,#ffd166,#ff6b6b)">Analyze with LLM</button>
+    </div>
+
+    <div class="footer">Tip: LLM option requires server-side OpenAI key (instructions shown after clicking)</div>
+  </div>
+
+  <!-- RIGHT: results & suggestions -->
+  <div class="right">
+    <h2>Insights & Suggestions</h2>
+    <div class="muted">What to add, improve, and certifications recommended — instant, actionable.</div>
+
+    <div id="insights" class="suggestions" aria-live="polite">
+      <div class="card">
+        <div class="small">No analysis yet — upload or paste resume and click <b>Analyze (Local AI)</b>.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px" class="card">
+      <div class="small"><b>How this 'Local AI' works</b>: It extracts keywords from your resume text (projects, skills, tools) and applies expert rules to produce suggestions (projects to add, missing certifications, wording tips). For richer, contextual guidance enable LLM analysis (server required).</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- Utilities ---------- */
+function humanFileSize(bytes){
+  if (!bytes) return '0 B';
+  const thresh = 1024;
+  if (bytes < thresh) return bytes + ' B';
+  const units = ['KB','MB','GB','TB'];
+  let u = -1;
+  do { bytes /= thresh; ++u; } while (bytes >= thresh && u < units.length - 1);
+  return bytes.toFixed(1)+' '+units[u];
+}
+
+/* ---------- Simple rule-based analyzer ---------- */
+const certsBySkill = {
+  'aws': ['AWS Certified Cloud Practitioner','AWS Certified Solutions Architect (Associate)'],
+  'azure': ['Microsoft Certified: Azure Fundamentals','Azure Administrator Associate'],
+  'gcp': ['Google Cloud Digital Leader','Professional Cloud Architect'],
+  'machine learning': ['Coursera: Machine Learning (Andrew Ng)','TensorFlow Developer Certificate'],
+  'data': ['IBM Data Science Professional Certificate','Google Data Analytics'],
+  'sql': ['Mode SQL Certification','Microsoft SQL Server Certification'],
+  'javascript': ['Frontend mentor projects','Modern JS bootcamp certificate'],
+  'react': ['Meta Front-End Developer','React Nanodegree'],
+  'python': ['Python for Everybody','Python Institute Certifications'],
+  'dsa': ['Grokking the Coding Interview (pattern)', 'LeetCode practice (100+ problems)'],
+  'devops': ['Docker Certified Associate','Certified Kubernetes Application Developer'],
+  'communication': ['Toastmasters practice','Communication Skills course']
+};
+
+function suggestCerts(found){
+  const rec = new Set();
+  for(const s of found){
+    for(const key in certsBySkill){
+      if(s.includes(key) || key.includes(s)){
+        certsBySkill[key].forEach(c=>rec.add(c));
+      }
+    }
+  }
+  return Array.from(rec).slice(0,6);
+}
+
+function extractKeywords(text){
+  const lowered = text.toLowerCase();
+  // basic skill keywords
+  const skills = ['python','java','c++','javascript','react','node','sql','mysql','postgres','aws','azure','gcp','docker','kubernetes','machine learning','ml','data','pandas','numpy','html','css','dsa','algorithms','system design','communication','leadership','git','github','rest api','microservices','testing','selenium'];
+  const found = [];
+  skills.forEach(s => { if(lowered.includes(s)) found.push(s); });
+  // projects / internship detection
+  const hasProject = /project|projects|built|developed|created|implemented/.test(lowered);
+  const hasIntern = /intern(ship)?|interned/.test(lowered);
+  return {found, hasProject, hasIntern, text:lowered};
+}
+
+function analyzeText(text){
+  const {found, hasProject, hasIntern} = extractKeywords(text);
+  const suggestions = [];
+  // 1. Projects
+  if(!hasProject){
+    suggestions.push({
+      title: 'Add Projects',
+      detail: 'Include 2–3 projects with short bullet points: problem, approach, and measurable impact (e.g., reduced latency by 20%). Add GitHub links.'
+    });
+  } else {
+    suggestions.push({title:'Projects', detail:'Good — projects detected. Ensure each project includes tech stack, your role, and 1-2 measurable outcomes.'});
+  }
+  // 2. Internships / Experience
+  if(!hasIntern){
+    suggestions.push({title:'Get Practical Experience', detail:'Try internships, freelance gigs, or contribute to open-source to show real-world experience.'});
+  } else {
+    suggestions.push({title:'Internship', detail:'You have internship(s). Highlight key achievements and technologies used.'});
+  }
+  // 3. Skills coverage
+  if(found.length === 0){
+    suggestions.push({title:'Add Technical Skills', detail:'List programming languages, frameworks, and tools (e.g., Python, SQL, Git, React).'});
+  } else {
+    suggestions.push({title:`Detected Skills (${found.length})`, detail: found.join(', ')});
+  }
+  // 4. Certifications recommendation
+  const certs = suggestCerts(found);
+  if(certs.length){
+    suggestions.push({title:'Recommended Certifications', detail: certs.join(' • ')});
+  } else {
+    suggestions.push({title:'Certifications', detail: 'Consider general certifications: Coursera/edX Nanodegrees, AWS Cloud Practitioner, SQL courses.'});
+  }
+  // 5. Soft skills & resume tips
+  suggestions.push({title:'Soft Skills & Formatting', detail:'Keep summary concise (2 lines), use bullets, quantify achievements, and keep resume to 1 page if early-career.'});
+  // 6. Closing action
+  suggestions.push({title:'Next Steps', detail:'Add projects, upload GitHub links, pursue 1-2 relevant certifications, and schedule mock interviews.'});
+
+  // Build metrics
+  const readiness = Math.min(85, Math.max(40, 40 + found.length*6 + (hasProject?10:0) + (hasIntern?8:0)));
+  return {suggestions, certs, found, hasProject, hasIntern, readiness};
+}
+
+/* ---------- UI wiring ---------- */
+const fileInput = document.getElementById('fileInput');
+const resumeText = document.getElementById('resumeText');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const llmBtn = document.getElementById('llmBtn');
+const fileInfoDiv = document.getElementById('fileInfo');
+const insightsDiv = document.getElementById('insights');
+
+fileInput.addEventListener('change', (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  fileInfoDiv.style.display = 'block';
+  fileInfoDiv.innerHTML = `📎 <b>${f.name}</b> • ${f.type || 'Unknown'} • ${humanFileSize(f.size)}`;
+  // If it's a text file we can read it; for pdf/docx we ask user to paste content for best results
+  if(f.type.startsWith('text/') || f.name.endsWith('.txt')){
+    const reader = new FileReader();
+    reader.onload = ()=> resumeText.value = reader.result;
+    reader.readAsText(f);
+  } else {
+    // give guidance
+    resumeText.value = resumeText.value || `NOTE: ${f.name} uploaded. For best local analysis paste your resume text here (or enable server-side parsing).`;
+  }
+});
+
+function renderSuggestions(result){
+  insightsDiv.innerHTML = '';
+  const topCard = document.createElement('div'); topCard.className='card';
+  topCard.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div><b>Readiness Score</b><div class="small" style="font-size:20px;margin-top:6px;color:var(--accent)">${result.readiness}%</div></div><div class="small">Skills detected: <b>${result.found.length}</b></div></div>`;
+  insightsDiv.appendChild(topCard);
+
+  result.suggestions.forEach(s=>{
+    const c = document.createElement('div'); c.className='card';
+    c.innerHTML = `<b>${s.title}</b><div class="small" style="margin-top:8px">${s.detail}</div>`;
+    insightsDiv.appendChild(c);
+  });
+
+  if(result.certs && result.certs.length){
+    const certCard = document.createElement('div'); certCard.className='card';
+    certCard.innerHTML = `<b>Certifications you can consider</b>
+      <div style="margin-top:8px" class="recommend-list">${result.certs.map(c=>`<div class="rec-item"><span>${c}</span><button class="btn" style="padding:6px 8px;font-size:12px" onclick="copyText('${c.replace(/'/g,'\\\'')}')">Copy</button></div>`).join('')}</div>`;
+    insightsDiv.appendChild(certCard);
+  }
+}
+
+function copyText(txt){
+  navigator.clipboard?.writeText(txt).then(()=> alert('Copied: ' + txt));
+}
+
+/* Analyze (local rule-based) */
+analyzeBtn.addEventListener('click', ()=>{
+  const text = (resumeText.value || '').trim();
+  if(!text){
+    alert('Please paste your resume text or upload and paste it into the textarea for analysis.');
+    return;
+  }
+  const res = analyzeText(text);
+  renderSuggestions(res);
+});
+
+/* Optional: LLM powered analyze — this will require a server to avoid exposing API key.
+   The client below is a placeholder: it demonstrates the fetch call you would make to your server.
+   Server endpoint /api/analyze should accept {text} and return suggestions JSON.
+*/
+llmBtn.addEventListener('click', async ()=>{
+  const text = (resumeText.value || '').trim();
+  if(!text){
+    alert('Please paste your resume text (LLM analysis requires resume text).');
+    return;
+  }
+  // Show quick info to the user
+  const confirmUse = confirm('LLM analysis requires a server-side OpenAI key. Do you want to see the sample server code to enable this? (Click OK)');
+  if(!confirmUse) return;
+  // Show instructions (quick)
+  alert('Server-side instructions:\n1) Create POST /api/analyze that calls OpenAI with the resume text and returns suggestions.\n2) This avoids exposing your API key in client-side code.\n\nI can generate the server snippet if you want — say "Generate server code".');
+});
+
+/* Bonus: allow quick sample text to demo */
+resumeText.placeholder = 'Paste resume text here (e.g. summary, projects, skills). For best results copy from your resume and paste.';
+
+/* End */
+</script>
+
+</body>
+</html>

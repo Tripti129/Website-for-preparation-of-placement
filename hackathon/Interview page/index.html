@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Hub</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+</head>
+<body>
+
+<header>
+    <h2>Interview Dashboard</h2>
+    <div class="user-profile">
+        <img src="https://i.ibb.co/6v6Lx3C/user.png" alt="User">
+        <span class="name">Sneha | CSE Student</span>
+    </div>
+</header>
+
+<section class="container">
+
+    <div class="card" onclick="openPage('schedule.html')">
+        <i class="fa-solid fa-calendar-check"></i>
+        <h3>Schedule Interview</h3>
+        <p>Plan and schedule mock interviews</p>
+    </div>
+
+    <div class="card" onclick="openPage('questions.html')">
+        <i class="fa-solid fa-circle-question"></i>
+        <h3>Practice Questions</h3>
+        <p>Hand-picked technical & HR questions</p>
+    </div>
+
+    <div class="card" onclick="openPage('coding.html')">
+        <i class="fa-solid fa-code"></i>
+        <h3>Coding Practice</h3>
+        <p>Solve coding interview challenges</p>
+    </div>
+
+    <div class="card" onclick="openPage('mock.html')">
+        <i class="fa-solid fa-video"></i>
+        <h3>Mock Interview</h3>
+        <p>AI-powered mock interview simulation</p>
+    </div>
+
+    <div class="card" onclick="openPage('resume.html')">
+        <i class="fa-solid fa-file-lines"></i>
+        <h3>Resume Analyzer</h3>
+        <p>Upload resume & get improvement tips</p>
+    </div>
+
+    <div class="card" onclick="openPage('feedback.html')">
+        <i class="fa-solid fa-lightbulb"></i>
+        <h3>Interview Tips</h3>
+        <p>Expert tips to crack interviews confidently</p>
+    </div>
+
+</section>
+
+<script src="script.js"></script>
+</body>
+</html>

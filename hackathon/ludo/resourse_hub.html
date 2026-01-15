@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Hub - Course Notes</title>
+    <style>
+        /* General Body and Header Styling (Dark Theme) */
+body {
+    /* Poppins font is loaded via the HTML file */
+    font-family: 'Poppins', sans-serif; 
+    margin: 0;
+    padding: 0;
+    background-color: #0d0c1d; /* Very dark background */
+    color: #e0e0e0; /* Light text for contrast */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    background: linear-gradient(135deg, #1a1835, #0d0c1d); /* Subtle gradient for header */
+    padding: 30px 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 40px;
+}
+
+header h1 {
+    color: #9b59b6; /* Purple accent */
+    font-size: 2.8em;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+header p {
+    color: #b0b0b0;
+    font-size: 1.1em;
+}
+
+/* Main Container for Course/Resource Cards */
+.course-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* Responsive grid layout */
+    gap: 30px;
+    padding: 0px 40px 60px;
+    max-width: 1400px;
+    margin: auto;
+    flex-grow: 1; 
+}
+
+/* --- Course Card Styling and Animations --- */
+
+.course-card {
+    background-color: #1a1835; /* Darker card background */
+    border-radius: 15px; 
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Deeper shadow */
+    padding: 30px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer; 
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden; 
+    z-index: 0;
+}
+
+/* Glowing Border Effect (visible on hover for clickable cards) */
+.course-card::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #8e44ad, #3498db, #2ecc71);
+    z-index: -1;
+    border-radius: 17px; 
+    opacity: 0; 
+    transition: opacity 0.4s ease;
+}
+
+.course-card:hover::before {
+    opacity: 1; 
+}
+
+.course-card:hover {
+    transform: translateY(-8px) scale(1.02); /* Pronounced lift and scale */
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5); 
+}
+
+.course-card h3 {
+    color: #e0e0e0; 
+    margin-top: 0;
+    font-size: 1.6em;
+    margin-bottom: 15px;
+}
+
+/* Progress Bar Styling and Animation */
+.progress-bar {
+    background-color: #2c2940; 
+    border-radius: 5px;
+    margin-top: 15px;
+    height: 12px; 
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background: linear-gradient(to right, #9b59b6, #3498db); 
+    width: 0%; /* Start at 0 for JS animation */
+    transition: width 1s ease-out; /* Smooth transition */
+    border-radius: 5px;
+}
+
+
+/* --- Resource Hub Specific Styles --- */
+
+.resource-card {
+    cursor: default; /* Not clickable like course cards */
+    text-align: center;
+    padding: 30px 20px;
+}
+
+/* Override animations for static resource cards */
+.resource-card:hover {
+    transform: none; 
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Keep original shadow */
+}
+
+.resource-card:hover::before {
+    opacity: 0; /* Remove glowing border on hover */
+}
+
+.resource-card p {
+    font-size: 0.9em;
+    color: #8e8d9b;
+    margin-bottom: 20px;
+}
+
+.icon-container {
+    font-size: 3em;
+    color: #9b59b6; /* Purple accent for icons */
+    margin-bottom: 10px;
+}
+
+/* Download Button Styling */
+.download-btn {
+    display: inline-block;
+    background: linear-gradient(90deg, #3498db, #2ecc71); /* Blue to Green Gradient */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
+}
+.download-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(52, 152, 219, 0.6);
+    opacity: 0.9;
+}
+
+
+/* --- Modal Styling and Animations --- */
+
+.modal {
+    display: none; 
+    position: fixed;
+    z-index: 1000; 
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7); 
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: #1a1835; 
+    margin: 8% auto;
+    padding: 35px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 90%;
+    max-width: 700px; 
+    border-radius: 15px;
+    position: relative;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Modal Animation Keyframes */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeOutScale {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+}
+
+/* Apply opening and closing animations */
+.modal-content.modal-opening {
+    animation: fadeInScale 0.3s ease-out forwards;
+}
+
+.modal-content.modal-closing {
+    animation: fadeOutScale 0.3s ease-in forwards;
+}
+
+
+/* Close Button */
+.close-button {
+    color: #b0b0b0;
+    float: right;
+    font-size: 32px;
+    font-weight: bold;
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    cursor: pointer; 
+    transition: color 0.2s;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #e0e0e0;
+}
+
+/* Syllabus Content Styling */
+#modal-course-title {
+    color: #9b59b6;
+    font-size: 2em;
+    margin-top: 0;
+    margin-bottom: 25px;
+}
+
+#modal-syllabus-content ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+#modal-syllabus-content ul li {
+    background-color: #2c2940; 
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid #3498db; 
+    border-radius: 8px;
+    color: #e0e0e0;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+#modal-syllabus-content ul li:hover {
+    background-color: #3a374c; 
+    transform: translateX(5px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .course-container {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+    .modal-content {
+        width: 95%;
+        margin: 5% auto;
+    }
+}
+    </style>
+   
+</head>
+<body>
+
+    <header>
+        <h1>Resource Hub 📂</h1>
+        <p>Download notes, cheat sheets, and course materials.</p>
+    </header>
+
+    <main class="course-container resource-container">
+        </main>
+    
+        <script>
+            // 1. Define Resource Data
+const resources = [
+    {
+        id: 'html-cheatsheet',
+        title: 'HTML Semantic Tags Cheat Sheet',
+        course: 'HTML & CSS Fundamentals',
+        fileType: 'PDF',
+        link: 'notes/html_cheat_sheet.pdf', // MAKE SURE THIS FILE EXISTS!
+        icon: '📝'
+    },
+    {
+        id: 'js-syntax',
+        title: 'JavaScript Modern Syntax Guide',
+        course: 'JavaScript Essentials',
+        fileType: 'DOCX',
+        link: 'notes/js_syntax_guide.docx', // MAKE SURE THIS FILE EXISTS!
+        icon: '💡'
+    },
+    {
+        id: 'flex-grid',
+        title: 'Flexbox and Grid Master Guide',
+        course: 'HTML & CSS Fundamentals',
+        fileType: 'PDF',
+        link: 'notes/flex_grid_guide.pdf', // MAKE SURE THIS FILE EXISTS!
+        icon: '📐'
+    },
+    {
+        id: 'react-hooks',
+        title: 'React Hooks Reference',
+        course: 'React.js Mastery',
+        fileType: 'PDF',
+        link: 'notes/react_hooks.pdf', // MAKE SURE THIS FILE EXISTS!
+        icon: '⚛'
+    },
+    {
+        id: 'python-pandas',
+        title: 'Pandas Data Analysis Cookbook',
+        course: 'Python for Data Science',
+        fileType: 'ZIP',
+        link: 'notes/pandas_cookbook.zip', // MAKE SURE THIS FILE EXISTS!
+        icon: '🐍'
+    },
+    {
+        id: 'figma-guide',
+        title: 'Figma Auto Layout Quick Start',
+        course: 'UI/UX Design Fundamentals',
+        fileType: 'PDF',
+        link: 'notes/figma_layout.pdf', // MAKE SURE THIS FILE EXISTS!
+        icon: '🎨'
+    }
+];
+
+const container = document.querySelector('.resource-container');
+
+// 2. Function to Render Resource Cards
+function renderResourceCards() {
+    container.innerHTML = ''; // Clear existing content
+    
+    resources.forEach(resource => {
+        // Prepare the download filename by replacing spaces for cleaner saving
+        const filename = resource.title.replace(/\s/g, '_') + '.' + resource.fileType.toLowerCase();
+        
+        const cardHTML = `
+            <div class="course-card resource-card" data-resource-id="${resource.id}">
+                <div class="icon-container">${resource.icon}</div>
+                <h3>${resource.title}</h3>
+                <p>Course: ${resource.course}</p>
+                <p>File Type: ${resource.fileType}</p>
+                <a href="${resource.link}" download="${filename}" class="download-btn">
+                    Download ${resource.fileType}
+                </a>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', cardHTML);
+    });
+}
+
+// Initial load of the resource cards when the page content is ready
+document.addEventListener('DOMContentLoaded', renderResourceCards);
+        </script>
+</body>
+</html>

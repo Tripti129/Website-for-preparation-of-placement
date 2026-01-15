@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Coding Arena — 3D Neon</title>
+<style>
+  :root{
+    --bg:#071024;
+    --panel:#061225;
+    --accent1:#6a4cff;
+    --accent2:#3ec7ff;
+    --muted:#9aa4c0;
+    --glass: rgba(255,255,255,0.03);
+    --neon-shadow: 0 10px 40px rgba(106,76,255,0.12);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#030616 0%, #071024 60%);color:#e6eef8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:36px}
+  .container{max-width:1100px;width:100%;display:grid;grid-template-columns:1fr 440px;gap:28px;align-items:start}
+  /* Left: Arena UI */
+  .arena{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.14));
+    border-radius:14px;padding:22px;box-shadow:var(--neon-shadow);border:1px solid rgba(255,255,255,0.03);
+  }
+
+  .arena-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+  .title{display:flex;gap:12px;align-items:center}
+  .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:grid;place-items:center;font-weight:800;font-size:20px;color:white;box-shadow:0 8px 30px rgba(62,199,255,0.08)}
+  .hgroup h2{margin:0;font-size:20px} .hgroup p{margin:2px 0 0;color:var(--muted);font-size:13px}
+
+  .controls{display:flex;gap:10px;align-items:center}
+  .select, .btn {appearance:none;border:0;background:transparent;color:inherit}
+  .select{padding:10px 12px;border-radius:10px;background:linear-gradient(180deg,var(--glass),rgba(255,255,255,0.01));outline:1px solid rgba(255,255,255,0.03);font-weight:700}
+  .btn{padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,var(--accent1),var(--accent2));cursor:pointer;color:white;font-weight:800}
+
+  /* 3D arena card */
+  .arena-card-wrap{perspective:1200px;display:flex;justify-content:center}
+  .arena-card{width:700px;max-width:100%;height:380px;transform-style:preserve-3d;transition:transform .35s ease;position:relative;border-radius:14px}
+  .panel-face{
+    position:absolute;inset:0;border-radius:14px;padding:22px;backface-visibility:hidden;display:flex;flex-direction:column;justify-content:space-between;
+    border:1px solid rgba(255,255,255,0.03)
+  }
+  .card-front{background:linear-gradient(180deg, rgba(6,10,21,0.95), rgba(3,9,18,0.98));box-shadow:0 30px 80px rgba(2,6,23,0.7)}
+  .card-back{background:linear-gradient(180deg, rgba(3,7,14,0.95), rgba(6,12,20,0.98));transform:rotateY(180deg)}
+
+  .card-header{display:flex;justify-content:space-between;align-items:center}
+  .meta{display:flex;gap:12px;align-items:center}
+  .chip{background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:999px;font-weight:700;color:var(--muted);font-size:13px}
+  .mode-label{font-weight:800;color:var(--muted);font-size:13px}
+
+  .arena-body{display:grid;grid-template-columns:1fr 360px;gap:16px;margin-top:12px;align-items:start}
+  .left-col{display:flex;flex-direction:column;gap:12px}
+  .desc{color:var(--muted);font-size:14px}
+  .controls-row{display:flex;gap:8px;align-items:center}
+
+  /* small scoreboard */
+  .scoreboard{display:flex;gap:12px}
+  .scorecard{background:rgba(255,255,255,0.02);padding:12px;border-radius:10px;text-align:center;min-width:82px}
+  .scorecard strong{display:block;font-size:18px}
+
+  /* right side: quick info */
+  .right-col{display:flex;flex-direction:column;gap:10px}
+  .info-panel{background:rgba(255,255,255,0.02);padding:12px;border-radius:10px;color:var(--muted);font-size:13px}
+
+  /* overlay: problem modal (centered) */
+  .modal{
+    position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(0.98);min-width:320px;width:min(1100px,95%);max-height:92vh;overflow:hidden;border-radius:12px;
+    background:linear-gradient(180deg,#071024,#061225);box-shadow:0 50px 120px rgba(2,6,23,0.7);border:1px solid rgba(255,255,255,0.04);display:none;flex-direction:column;z-index:60;
+  }
+  .modal.show{display:flex;animation:pop .18s ease both}
+  @keyframes pop{from{opacity:0;transform:translate(-50%,-50%) scale(0.96)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.02)}
+  .modal-body{display:grid;grid-template-columns:1fr 420px;gap:16px;padding:18px;overflow:auto}
+  .problem{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:12px;border-radius:10px}
+  .problem h3{margin:0 0 8px}
+  .codebox{height:300px;border-radius:10px;background:rgba(0,0,0,0.45);padding:10px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, \"Roboto Mono\";font-size:13px;color:#dbeafe;overflow:auto}
+  textarea.editor{width:100%;height:300px;padding:12px;border-radius:10px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.03);color:#dbeafe;font-family:ui-monospace,monospace;font-size:13px}
+  .modal-footer{display:flex;justify-content:space-between;gap:10px;padding:12px 18px;border-top:1px solid rgba(255,255,255,0.02)}
+  .btn-ghost{padding:10px 12px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);cursor:pointer}
+  .btn-primary{padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:white;font-weight:800;cursor:pointer}
+
+  /* hint box */
+  .hint{background:rgba(255,255,255,0.02);padding:10px;border-radius:10px;color:var(--muted);font-size:13px}
+
+  /* small helper */
+  .muted{color:var(--muted);font-size:13px}
+  .danger{color:#ff8a8a}
+  .success{color:#7ef0a8}
+
+  /* responsive */
+  @media (max-width:1100px){ .container{grid-template-columns:1fr} .arena-card{height:420px} .arena-body{grid-template-columns:1fr} .modal-body{grid-template-columns:1fr} textarea.editor{height:260px} }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="arena">
+    <div class="arena-top">
+      <div class="title">
+        <div class="logo">CA</div>
+        <div class="hgroup">
+          <h2>Coding Arena</h2>
+          <p>Timed coding challenges with hints & adaptive difficulty — train like LeetCode.</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <select id="langSelect" class="select">
+          <option value="js">JavaScript</option>
+          <option value="py">Python</option>
+          <option value="cpp">C++</option>
+        </select>
+        <select id="difficultySelect" class="select">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+        <button id="startArena" class="btn">Start Challenge</button>
+      </div>
+    </div>
+
+    <div class="arena-card-wrap">
+      <div class="arena-card" id="arenaCard">
+        <!-- FRONT -->
+        <div class="panel-face card-front">
+          <div class="card-header">
+            <div class="meta">
+              <div class="chip mode-label" id="arenaMode">Solo</div>
+              <div class="chip" id="arenaDifficulty">Medium</div>
+              <div class="chip" id="arenaTimer">Timer: —</div>
+            </div>
+            <div class="chip">Problems: <strong id="arenaCount">0</strong></div>
+          </div>
+
+          <div class="arena-body">
+            <div class="left-col">
+              <div class="desc">Showcase your problem solving. Start a timed challenge that adjusts difficulty based on your performance. Hints cost points.</div>
+
+              <div class="controls-row">
+                <div class="scoreboard">
+                  <div class="scorecard">
+                    <div class="muted">Score</div>
+                    <strong id="score">0</strong>
+                  </div>
+                  <div class="scorecard">
+                    <div class="muted">Streak</div>
+                    <strong id="streak">0</strong>
+                  </div>
+                  <div class="scorecard">
+                    <div class="muted">Rank</div>
+                    <strong id="rank">—</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:8px;color:var(--muted);font-size:13px">Tip: Click Start Challenge. The problem will open in a modal with editor & run/submit options. This demo simulates judging (no server execution).</div>
+            </div>
+
+            <div class="right-col">
+              <div class="info-panel"><strong>Adaptive difficulty</strong><div class="muted" style="margin-top:6px">Solve quicker to increase difficulty next round. Fail often and it will adapt downward.</div></div>
+              <div class="info-panel"><strong>Hints</strong><div class="muted" style="margin-top:6px">Hints cost <strong id="hintCost">20</strong> points. Use sparingly.</div></div>
+              <div class="info-panel"><strong>Source</strong><div class="muted" style="margin-top:6px">Problems can be fetched from an AI/LeetCode-like source. See fetch hook in code.</div></div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:8px">
+            <button class="btn-ghost" id="openGallery">Browse Problems</button>
+            <button class="btn" id="quickStart">Quick Start</button>
+          </div>
+        </div>
+
+        <!-- BACK (flipped info / recent results) -->
+        <div class="panel-face card-back">
+          <div>
+            <h3 style="margin:0 0 10px">Recent Results</h3>
+            <div class="muted">No sessions yet — finish a challenge to see recent performance and recommendations.</div>
+            <div id="recentList" style="margin-top:12px"></div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="muted">Arena adaptive engine: uses speed + correctness to tune problems.</div>
+            <div><button class="btn-ghost" id="toFront">Back</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right column: (could be leaderboard / gallery) -->
+  <aside style="display:flex;flex-direction:column;gap:14px">
+    <div style="background:rgba(255,255,255,0.02);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)">
+      <h4 style="margin:0 0 8px">Coding Contest</h4>
+      <p class="muted" style="margin:0 0 12px">Timed contests, global leaderboard & challenge rooms. (Demo links below)</p>
+      <button class="btn" id="openContest">Open Contest Demo</button>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.02);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);color:var(--muted)">
+      <h4 style="margin:0 0 8px">Sample Sources</h4>
+      <ul style="margin:0;padding-left:18px">
+        <li>LeetCode-style problems (AI-assisted)</li>
+        <li>Curated DSA list</li>
+        <li>User-submitted problems</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<!-- Problem Modal -->
+<div class="modal" id="modal">
+  <div class="modal-header">
+    <div>
+      <strong id="probTitle">Problem Title</strong>
+      <div class="muted" id="probMeta">Easy • JS • 1 In/Out</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="muted">Time left: <strong id="modalTimer">00:00</strong></div>
+      <button class="btn-ghost" id="closeModal">Close</button>
+    </div>
+  </div>
+  <div class="modal-body">
+    <div>
+      <div class="problem">
+        <h3 id="probQ">Problem statement will appear here</h3>
+        <div id="probDesc" class="muted">Description...</div>
+        <div style="margin-top:12px">
+          <strong>Input / Output</strong>
+          <div id="probIO" class="muted" style="margin-top:6px"></div>
+        </div>
+        <div style="margin-top:12px">
+          <strong>Hint</strong>
+          <div id="probHint" class="hint">Unlock to view hint</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <select id="editorLang" class="select">
+          <option value="js">JavaScript</option>
+          <option value="py">Python</option>
+          <option value="cpp">C++</option>
+        </select>
+        <button class="btn-ghost" id="getHint">Get Hint (-<span id="hintCost2">20</span> pts)</button>
+        <div style="flex:1"></div>
+        <div class="muted">Marks: <strong id="probMarks">+100 / -30</strong></div>
+      </div>
+
+      <textarea placeholder="// write your solution or pseudo-solution here" class="editor" id="editor"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        <div class="muted" id="runOutput">Output: —</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-ghost" id="runBtn">Run (simulate)</button>
+          <button class="btn-primary" id="submitBtn">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <div class="muted">Note: This demo simulates judge results locally. Replace `simulateJudge()` with real judge endpoints for production.</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-ghost" id="forfeitBtn">Forfeit (-30)</button>
+      <button class="btn-ghost" id="saveBtn">Save Draft</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/*
+  Coding Arena - demo single-file
+  - Simulated judge (no server execution)
+  - Hook: function fetchAIProblems(subject,difficulty) - replace with backend call
+  - Scoring: correct +100, wrong -30, hint costs -20 (configurable)
+  - Adaptive: difficulty up/down based on time & correctness
+*/
+
+// ---------- Config ----------
+const CONFIG = {
+  QUESTIONS_PER_SESSION: 1,    // number of problems per challenge (set to >1 for full session)
+  MARKS_CORRECT: 100,
+  MARKS_WRONG: -30,
+  HINT_COST: 20,
+  BASE_TIME_SEC: { easy: 300, medium: 600, hard: 1200 } // seconds
+};
+
+// ---------- Sample local problems (fallback / demo) ----------
+const SAMPLE_PROBLEMS = {
+  easy: [
+    {
+      id: 'e1',
+      title: 'Sum of Two Numbers',
+      difficulty: 'easy',
+      langIO: 'Input: 2 3 → Output: 5',
+      statement: 'Given two integers, return their sum.',
+      hint: 'Just add the two numbers.',
+      samples: [{in:'2 3', out:'5'}],
+      // simple "expected" checker: expected string we check in user code or user output
+      expectedOutput: '5'
+    }
+  ],
+  medium: [
+    {
+      id: 'm1',
+      title: 'Reverse String',
+      difficulty: 'medium',
+      langIO: 'Input: "hello" → Output: "olleh"',
+      statement: 'Return the reverse of the input string.',
+      hint: 'Use two-pointer swap or built-in reverse.',
+      samples: [{in:'hello', out:'olleh'}],
+      expectedOutput: 'olleh'
+    }
+  ],
+  hard: [
+    {
+      id: 'h1',
+      title: 'Two Sum (simple)',
+      difficulty: 'hard',
+      langIO: 'Input: [2,7,11,15], target=9 → Output: [0,1]',
+      statement: 'Return indices of two numbers such that they add up to target. (Demo simplified judge)',
+      hint: 'Try hashing values to indices.',
+      samples: [{in:'[2,7,11,15],9', out:'[0,1]'}],
+      expectedOutput: '[0,1]'
+    }
+  ]
+};
+
+// ---------- State ----------
+let score = 0;
+let streak = 0;
+let currentProblem = null;
+let sessionProblems = [];
+let sessionIndex = 0;
+let timerInterval = null;
+let timeLeft = 0;
+let adaptiveLevel = 'medium'; // will change based on performance
+
+// ---------- Elements ----------
+const startBtn = document.getElementById('startArena');
+const difficultySelect = document.getElementById('difficultySelect');
+const langSelect = document.getElementById('langSelect');
+const arenaCount = document.getElementById('arenaCount');
+const arenaDifficulty = document.getElementById('arenaDifficulty');
+const arenaTimer = document.getElementById('arenaTimer');
+const scoreEl = document.getElementById('score');
+const streakEl = document.getElementById('streak');
+const hintCostEl = document.getElementById('hintCost');
+const modal = document.getElementById('modal');
+const probTitle = document.getElementById('probTitle');
+const probMeta = document.getElementById('probMeta');
+const probQ = document.getElementById('probQ');
+const probDesc = document.getElementById('probDesc');
+const probIO = document.getElementById('probIO');
+const probHint = document.getElementById('probHint');
+const editor = document.getElementById('editor');
+const runBtn = document.getElementById('runBtn');
+const submitBtn = document.getElementById('submitBtn');
+const closeModal = document.getElementById('closeModal');
+const modalTimer = document.getElementById('modalTimer');
+const getHintBtn = document.getElementById('getHint');
+const hintCost2 = document.getElementById('hintCost2');
+const probMarks = document.getElementById('probMarks');
+const recentList = document.getElementById('recentList');
+const openGallery = document.getElementById('openGallery');
+const quickStart = document.getElementById('quickStart');
+const openContest = document.getElementById('openContest');
+const toFront = document.getElementById('toFront');
+const arenaCard = document.getElementById('arenaCard');
+const openContestBtn = document.getElementById('openContest');
+
+// init UI values
+hintCostEl.textContent = CONFIG.HINT_COST;
+hintCost2.textContent = CONFIG.HINT_COST;
+probMarks.textContent = `+${CONFIG.MARKS_CORRECT} / ${CONFIG.MARKS_WRONG}`;
+
+// ---------- Utility: modal show/hide ----------
+function showModal(){ modal.classList.add('show'); }
+function hideModal(){ modal.classList.remove('show'); clearInterval(timerInterval); }
+
+// ---------- Placeholder: fetch problems from AI/backend ----------
+async function fetchAIProblems(subject, difficulty, count=1){
+  // Replace this with a real backend fetch. Example:
+  // const res = await fetch('/api/generate-problems', {method:'POST', body: JSON.stringify({subject,difficulty,count})});
+  // return await res.json();
+
+  // Demo fallback: return shuffled SAMPLE_PROBLEMS[difficulty]
+  const pool = SAMPLE_PROBLEMS[difficulty] || [];
+  // clone and slice
+  return pool.slice(0, Math.min(count, pool.length));
+}
+
+// ---------- Start Challenge ----------
+startBtn.addEventListener('click', async ()=>{
+  const diff = difficultySelect.value;
+  adaptiveLevel = diff;
+  arenaDifficulty.textContent = diff.charAt(0).toUpperCase() + diff.slice(1);
+  // fetch problems
+  sessionProblems = await fetchAIProblems(null, diff, CONFIG.QUESTIONS_PER_SESSION);
+  if(sessionProblems.length === 0){
+    alert('No problems available for chosen difficulty (demo).');
+    return;
+  }
+  sessionIndex = 0;
+  score = 0;
+  streak = 0;
+  scoreEl.textContent = score;
+  streakEl.textContent = streak;
+  arenaCount.textContent = sessionProblems.length;
+  openProblem(sessionProblems[sessionIndex]);
+});
+
+// quick start & gallery (demo)
+quickStart.addEventListener('click', ()=>{ difficultySelect.value = adaptiveLevel; startBtn.click(); });
+openGallery.addEventListener('click', ()=>{ alert('Problem gallery demo: implement list view to pick problems.'); });
+openContest.addEventListener('click', ()=>{ alert('Contest demo: integrate contest workflow & real-time leaderboards.'); });
+toFront.addEventListener('click', ()=>{ arenaCard.style.transform = ''; });
+
+// ---------- Open a problem in modal ----------
+async function openProblem(problem){
+  currentProblem = problem;
+  // fill UI
+  probTitle.textContent = problem.title;
+  probMeta.textContent = `${problem.difficulty.toUpperCase()} • ${langSelect.value.toUpperCase()}`;
+  probQ.textContent = problem.title;
+  probDesc.textContent = problem.statement;
+  probIO.textContent = problem.langIO || '';
+  probHint.textContent = 'Locked — click "Get Hint" to reveal (costs points).';
+  editor.value = ''; document.getElementById('runOutput').textContent = 'Output: —';
+
+  // set timer
+  timeLeft = CONFIG.BASE_TIME_SEC[problem.difficulty] || 600;
+  updateModalTimer();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    updateModalTimer();
+    if(timeLeft <= 0){
+      clearInterval(timerInterval);
+      // auto forfeit / mark wrong
+      handleForfeit(true);
+    }
+  }, 1000);
+
+  showModal();
+}
+
+// ---------- modal timer render ----------
+function updateModalTimer(){
+  const mm = Math.floor(timeLeft/60).toString().padStart(2,'0');
+  const ss = (timeLeft%60).toString().padStart(2,'0');
+  modalTimer.textContent = `${mm}:${ss}`;
+  arenaTimer.textContent = `Timer: ${mm}:${ss}`;
+}
+
+// ---------- get hint (costs points) ----------
+getHintBtn.addEventListener('click', ()=>{
+  if(!currentProblem) return;
+  if(score < CONFIG.HINT_COST){
+    alert('Not enough points for hint. Earn more by solving problems.');
+    return;
+  }
+  score -= CONFIG.HINT_COST;
+  scoreEl.textContent = score;
+  // reveal hint
+  probHint.textContent = currentProblem.hint || 'No hint available.';
+});
+
+// ---------- Run (simulate) ----------
+runBtn.addEventListener('click', ()=>{
+  if(!currentProblem) return;
+  const userCode = editor.value.trim();
+  // For demo: simple heuristic run — if user typed expectedOutput or sample output, show success
+  const success = simulateRun(userCode, currentProblem);
+  document.getElementById('runOutput').textContent = success ? 'Output: (looks correct for sample)' : 'Output: (did not match sample)';
+});
+
+// ---------- Submit: checks and scoring ----------
+submitBtn.addEventListener('click', ()=>{
+  if(!currentProblem) return;
+  const userCode = editor.value.trim();
+  const verdict = simulateJudge(userCode, currentProblem);
+  if(verdict === 'correct'){
+    clearInterval(timerInterval);
+    score += CONFIG.MARKS_CORRECT;
+    streak += 1;
+    alert('Correct! +' + CONFIG.MARKS_CORRECT + ' points.');
+    // adaptive: if solved quickly, increase difficulty
+    const timeUsed = (CONFIG.BASE_TIME_SEC[currentProblem.difficulty] || 600) - timeLeft;
+    if(timeUsed < (CONFIG.BASE_TIME_SEC[currentProblem.difficulty]||600) * 0.3){
+      // solved fast
+      if(currentProblem.difficulty === 'easy') adaptiveLevel = 'medium';
+      else if(currentProblem.difficulty === 'medium') adaptiveLevel = 'hard';
+    }
+    pushRecentResult(currentProblem.title, 'Solved', CONFIG.MARKS_CORRECT);
+    nextOrEnd();
+  } else {
+    clearInterval(timerInterval);
+    score += CONFIG.MARKS_WRONG; // negative marking
+    streak = 0;
+    alert('Wrong submission. ' + CONFIG.MARKS_WRONG + ' points.');
+    pushRecentResult(currentProblem.title, 'Wrong', CONFIG.MARKS_WRONG);
+    // adapt down if multiple fails
+    if(adaptiveLevel === 'hard') adaptiveLevel = 'medium';
+    else if(adaptiveLevel === 'medium') adaptiveLevel = 'easy';
+    nextOrEnd();
+  }
+  scoreEl.textContent = score;
+  streakEl.textContent = streak;
+});
+
+// Forfeit (auto wrong)
+document.getElementById('forfeitBtn').addEventListener('click', ()=>{ handleForfeit(false); });
+
+function handleForfeit(auto=false){
+  clearInterval(timerInterval);
+  score += CONFIG.MARKS_WRONG;
+  streak = 0;
+  const tag = auto ? 'Time Up' : 'Forfeited';
+  pushRecentResult(currentProblem ? currentProblem.title : 'Unknown', tag, CONFIG.MARKS_WRONG);
+  alert(`${tag}. ${CONFIG.MARKS_WRONG} points.`);
+  scoreEl.textContent = score;
+  streakEl.textContent = streak;
+  nextOrEnd();
+}
+
+// ---------- End or next problem ----------
+function nextOrEnd(){
+  hideModal();
+  sessionIndex++;
+  if(sessionIndex < sessionProblems.length){
+    // open next after short delay
+    setTimeout(()=>openProblem(sessionProblems[sessionIndex]), 600);
+  } else {
+    // session finished
+    arenaCard.style.transform = 'rotateY(180deg)'; // show back
+    arenaCount.textContent = 0;
+    alert(`Session finished! Score: ${score}`);
+    // prepare next session difficulty based on adaptiveLevel
+    difficultySelect.value = adaptiveLevel;
+    arenaDifficulty.textContent = adaptiveLevel.charAt(0).toUpperCase() + adaptiveLevel.slice(1);
+    // show recent results in panel
+    renderRecent();
+  }
+}
+
+// ---------- simulate judge (demo) ----------
+function simulateJudge(userCode, problem){
+  // Demo: if userCode contains expectedOutput or exact sample output then mark correct
+  if(!userCode) return 'wrong';
+  const expected = String(problem.expectedOutput).replace(/\s+/g,'').toLowerCase();
+  const codeNormalized = userCode.replace(/\s+/g,'').toLowerCase();
+  if(codeNormalized.includes(expected) || codeNormalized.includes(problem.title.replace(/\s+/g,'').toLowerCase())){
+    return 'correct';
+  }
+  // else wrong
+  return 'wrong';
+}
+
+// simulate run (lighter)
+function simulateRun(userCode, problem){
+  if(!userCode) return false;
+  const expected = String(problem.expectedOutput).replace(/\s+/g,'').toLowerCase();
+  return userCode.replace(/\s+/g,'').toLowerCase().includes(expected);
+}
+
+// ---------- Recent results tracking ----------
+const recent = [];
+function pushRecentResult(title, tag, delta){
+  recent.unshift({title,tag,delta,time:new Date().toLocaleTimeString()});
+  if(recent.length > 6) recent.pop();
+  renderRecent();
+}
+function renderRecent(){
+  recentList.innerHTML = '';
+  if(recent.length === 0){ recentList.innerHTML = '<div class="muted">No recent runs yet.</div>'; return; }
+  recent.forEach(r=>{
+    const el = document.createElement('div');
+    el.style.padding = '8px';
+    el.style.borderBottom = '1px dashed rgba(255,255,255,0.02)';
+    el.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${r.title}</strong><div class="muted">${r.time}</div></div><div style="text-align:right"><div class="${r.delta>0?'success':'danger'}">${r.delta>0?'+':''}${r.delta}</div><div class="muted">${r.tag}</div></div></div>`;
+    recentList.appendChild(el);
+  });
+}
+
+// ---------- modal controls ----------
+closeModal.addEventListener('click', hideModal);
+
+// keyboard: Esc closes
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape') hideModal();
+});
+
+// ---------- sample: when page loads, show a demo problem on "Browse Problems" -->
+openGallery.addEventListener('click', async ()=>{
+  // demo pick a medium sample
+  const demo = (await fetchAIProblems(null,'medium',1))[0];
+  if(!demo){ alert('No demo problem available.'); return; }
+  sessionProblems = [demo];
+  sessionIndex = 0;
+  openProblem(demo);
+});
+
+// ---------- small rotation card effect on hover ----------
+arenaCard.addEventListener('mousemove', function(e){
+  const r = this.getBoundingClientRect();
+  const x = (e.clientX - r.left) - r.width/2;
+  const y = (e.clientY - r.top) - r.height/2;
+  this.style.transform = `rotateY(${x/30}deg) rotateX(${ -y/40 }deg)`;
+});
+arenaCard.addEventListener('mouseleave', ()=>{ arenaCard.style.transform = ''; });
+
+// ---------- Hook to replace with real backend / AI ----------
+/*
+  To fetch AI-generated problems, replace `fetchAIProblems()` with a function that calls your server:
+  Example (Node/Express backend):
+    POST /generate-problems  body: { subject, difficulty, count }
+    Server calls OpenAI or any model with a precise prompt asking for JSON array:
+      [
+        { id, title, difficulty, langIO, statement, hint, samples, expectedOutput },
+        ...
+      ]
+    Then frontend uses that response as `sessionProblems`.
+  Keep judge & run on server for real execution: e.g. /judge endpoint or use sandboxed runners (DO NOT run untrusted code on client).
+*/
+
+// ---------- Small demo auto-start (optional) ----------
+document.addEventListener('DOMContentLoaded', ()=> {
+  // populate one sample problem count
+  arenaCount.textContent = '0';
+  arenaDifficulty.textContent = difficultySelect.value.charAt(0).toUpperCase() + difficultySelect.value.slice(1);
+});
+
+</script>
+</body>
+</html>

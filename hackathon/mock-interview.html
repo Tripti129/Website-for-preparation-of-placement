@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EduNerve AI – Mock Interview</title>
+<link rel="stylesheet" href="mock.css">
+</head>
+
+<body>
+
+<!-- AI Loading Screen -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-text">Starting AI Interview…</div>
+  <div class="dots">
+    <div></div><div></div><div></div>
+  </div>
+</div>
+
+<!-- Main Interview UI -->
+<div class="container">
+
+<header>
+  <h2>🎤 Mock Interview – AI Powered</h2>
+  <div class="timer" id="timer">00:00</div>
+</header>
+
+<div class="interview-box">
+
+  <!-- Webcam View -->
+  <div class="webcam">
+      <video id="video" autoplay></video>
+  </div>
+
+  <!-- AI Panel -->
+  <div class="ai-panel">
+      <h3>👩‍💼 AI Interviewer</h3>
+      <p id="question">Press "Start Interview" to begin</p>
+      <button id="startBtn">Start Interview</button>
+  </div>
+
+</div>
+
+</div>
+
+<script src="mock.js"></script>
+</body>
+</html>
